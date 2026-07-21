@@ -11,8 +11,9 @@
         #reader { width: 100%; max-width: 360px; margin: 15px auto; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .card { background: white; padding: 20px; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: none; }
         img { max-width: 130px; margin-top: 15px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-        button { background: #007bff; color: white; border: none; padding: 14px 28px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; max-width: 280px; margin: 5px auto; display: block; -webkit-tap-highlight-color: transparent; }
+        button { background: #007bff; color: white; border: none; padding: 14px 28px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; max-width: 280px; margin: 5px auto; display: block; }
         button:active { background: #0056b3; }
+        #info-estado { color: #666; font-size: 14px; margin-top: 10px; font-style: italic; }
     </style>
 </head>
 <body>
@@ -20,7 +21,8 @@
         <h1>Mi Biblioteca</h1>
         <p style="color: #666; margin-bottom: 20px;">Escanea el ISBN de un libro para añadirlo</p>
         
-        <button id="btn-camara" onclick="iniciarEscaneo()">Abrir Cámara Trasera</button>
+        <button id="btn-camara" onclick="inicializarCamarasXiaomi()">Abrir Cámara</button>
+        <div id="info-estado"></div>
         <div id="reader"></div>
 
         <div id="resultado" class="card">
@@ -37,31 +39,61 @@
         let html5QrCode;
         let libroActual = {};
 
-        function iniciarEscaneo() {
-            // Ocultar botón para evitar dobles clics
+        function actualizarEstado(txt) {
+            document.getElementById('info-estado').innerText = txt;
+        }
+
+        function inicializarCamarasXiaomi() {
+            actualizarEstado("Buscando lentes traseras...");
             document.getElementById('btn-camara').style.display = 'none';
-            
+
+            // Solicita la lista de cámaras físicas del Xiaomi
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length > 0) {
+                    // Intentamos buscar una cámara que en su nombre diga 'back', 'trasera' o 'environment'
+                    let camaraTrasera = devices.find(device => 
+                        device.label.toLowerCase().includes('back') || 
+                        device.label.toLowerCase().includes('trasera') ||
+                        device.label.toLowerCase().includes('0') // La cámara 0 suele ser la principal en Xiaomi
+                    );
+
+                    // Si no encuentra una con ese texto, elige la última de la lista (suele ser la trasera principal)
+                    let cameraId = camaraTrasera ? camaraTrasera.id : devices[devices.length - 1].id;
+                    
+                    actualizarEstado("Cámara encontrada. Iniciando visor...");
+                    arrancarEscaneoConId(cameraId);
+                } else {
+                    actualizarEstado("No se encontraron cámaras físicas.");
+                    document.getElementById('btn-camara').style.display = 'block';
+                }
+            }).catch(err => {
+                actualizarEstado("Error al listar cámaras: " + err);
+                document.getElementById('btn-camara').style.display = 'block';
+            });
+        }
+
+        function arrancarEscaneoConId(idDeCamara) {
             html5QrCode = new Html5Qrcode("reader");
-            const config = { fps: 10, qrbox: { width: 260, height: 160 } };
+            // Ajustamos el recuadro para que sea óptimo para códigos de barras alargados
+            const config = { fps: 15, qrbox: { width: 280, height: 130 } };
             
-            // Forzar el uso estricto de la cámara trasera ("environment")
             html5QrCode.start(
-                { facingMode: "environment" }, 
+                idDeCamara, 
                 config,
                 onScanSuccess
-            ).catch(err => {
-                alert("Error de cámara: Asegúrate de otorgar los permisos en el sistema.");
+            ).then(() => {
+                actualizarEstado("¡Listo! Enfoca el código de barras del libro.");
+            }).catch(err => {
+                actualizarEstado("Fallo al encender la lente: " + err);
                 document.getElementById('btn-camara').style.display = 'block';
-                console.error(err);
             });
         }
 
         function onScanSuccess(decodedText, decodedResult) {
-            // Detener la cámara tras una lectura exitosa
+            actualizarEstado("¡Código leído! Buscando libro...");
             html5QrCode.stop().then(() => {
-                document.getElementById('btn-camara').style.display = 'block';
                 buscarLibroPorISBN(decodedText);
-            }).catch(err => console.error("Error al detener la cámara", err));
+            }).catch(err => console.error("Error al apagar cámara", err));
         }
 
         async function buscarLibroPorISBN(isbn) {
@@ -71,7 +103,7 @@
                 const data = await response.json();
                 
                 if (data.totalItems > 0) {
-                    const info = data.items[0].volumeInfo; // Corregido índice para extraer correctamente
+                    const info = data.items[0].volumeInfo;
                     libroActual = {
                         titulo: info.title,
                         autores: info.authors ? info.authors.join(', ') : 'Autor desconocido',
@@ -82,11 +114,13 @@
                     document.getElementById('libro-autor').innerText = "Por: " + libroActual.autores;
                     document.getElementById('libro-portada').src = libroActual.portada;
                     document.getElementById('resultado').style.display = 'block';
+                    actualizarEstado("Libro cargado con éxito.");
                 } else {
+                    actualizarEstado("ISBN no encontrado en Google Books.");
                     alert("No se encontró el libro con el ISBN: " + isbn);
                 }
             } catch (error) {
-                alert("Error al conectar con el buscador de libros.");
+                actualizarEstado("Error de conexión con el servidor.");
                 console.error(error);
             }
         }
@@ -95,6 +129,7 @@
             let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
             biblioteca.push(libroActual);
             localStorage.setItem('misLibros', JSON.stringify(biblioteca));
+            actualizarEstado("Libro guardado localmente.");
             alert("¡Libro guardado en tu móvil!");
             document.getElementById('resultado').style.display = 'none';
         }

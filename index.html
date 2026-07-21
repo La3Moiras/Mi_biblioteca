@@ -4,30 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mi Biblioteca Nativa</title>
+    <!-- Librería secundaria de respaldo por si el navegador es antiguo -->
+    <script src="https://unpkg.com"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background: #f8f9fa; text-align: center; margin: 0; }
         .container { max-width: 500px; margin: auto; padding: 10px; }
         .card { background: white; padding: 20px; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: none; }
         img { max-width: 130px; margin-top: 15px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-        
-        /* Botón estilizado que activa la cámara nativa */
         .btn-captura { background: #007bff; color: white; border: none; padding: 14px 28px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; max-width: 280px; margin: 20px auto; display: block; text-decoration: none; }
         .btn-captura:active { background: #0056b3; }
         #info-estado { color: #666; font-size: 14px; margin-top: 10px; font-style: italic; }
-        
-        /* Ocultamos el input de tipo archivo real */
         #input-camara { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Mi Biblioteca</h1>
-        <p style="color: #666; margin-bottom: 20px;">Toma una foto al código de barras del libro</p>
+        <p style="color: #666; margin-bottom: 20px;">Toma una foto nítida al código de barras del libro</p>
         
-        <!-- Al pulsar esta etiqueta, Android simula el clic en el input de abajo -->
         <label for="input-camara" class="btn-captura">Abrir Cámara de Fotos</label>
-        
-        <!-- ESTE ES EL SECRETO ESTILO DOCUWARE: Abre la cámara trasera nativa del Xiaomi -->
         <input type="file" id="input-camara" accept="image/*" capture="environment" onchange="procesarFotoLibro(event)">
         
         <div id="info-estado">Estado: Esperando captura...</div>
@@ -54,57 +49,55 @@
             const file = event.target.files[0];
             if (!file) return;
 
-            actualizarEstado("Leyendo código de barras desde la imagen...");
+            actualizarEstado("Comprimiendo y analizando imagen...");
 
-            // Usamos una API en la nube gratuita para leer el código de barras de la foto
-            const formData = new FormData();
-            formData.append("file", file);
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // Reducimos la foto del Xiaomi a un tamaño manejable (max 1000px) para optimizar el lector
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const maxDim = 1000;
+                    let w = img.width;
+                    let h = img.height;
+                    
+                    if (w > h && w > maxDim) { h *= maxDim / w; w = maxDim; }
+                    else if (h > maxDim) { w *= maxDim / h; h = maxDim; }
+                    
+                    canvas.width = w;
+                    canvas.height = h;
+                    ctx.drawImage(img, 0, 0, w, h);
 
-            // Consultamos a la API de ZXing (un lector de códigos de barras online muy rápido)
-            fetch("https://zxing.org", {
-                method: "POST",
-                body: formData
-            })
-            .then(response => response.text())
-            .then(htmlText => {
-                // Parseamos el resultado HTML para extraer el número ISBN decodificado
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(htmlText, "text/html");
-                const thElements = doc.querySelectorAll("th");
-                
-                let isbnEncontrado = null;
-                thElements.forEach(th => {
-                    if (th.innerText.trim() === "Parsed Result Type") {
-                        const td = th.nextElementSibling;
-                        if (td && td.innerText.trim() === "ISBN") {
-                            // Si detecta un ISBN, buscamos el valor del texto crudo
-                            const rawTextTh = Array.from(doc.querySelectorAll("th")).find(el => el.innerText.trim() === "Raw text");
-                            if (rawTextTh) isbnEncontrado = rawTextTh.nextElementSibling.innerText.trim();
-                        }
-                    }
-                });
-
-                if (isbnEncontrado) {
-                    actualizarEstado("ISBN detectado (" + isbnEncontrado + "). Buscando datos...");
-                    buscarLibroPorISBN(isbnEncontrado);
-                } else {
-                    actualizarEstado("No se distinguió el código de barras claramente. Inténtalo de nuevo enfocando mejor.");
-                }
-            })
-            .catch(err => {
-                actualizarEstado("Error al procesar la imagen en el servidor.");
-                console.error(err);
-            });
+                    // Intentamos leer el código de barras localmente
+                    const codeReader = new ZXingJS.BrowserBarcodeReader();
+                    codeReader.decodeFromCanvas(canvas)
+                        .then(result => {
+                            const isbn = result.text;
+                            actualizarEstado("ISBN detectado: " + isbn + ". Buscando libro...");
+                            buscarLibroPorISBN(isbn);
+                        })
+                        .catch(err => {
+                            actualizarEstado("No se detectó el código. Asegúrate de que esté bien enfocado, iluminado y salga recto en la foto.");
+                            console.error(codeReader);
+                        });
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
         }
 
         async function buscarLibroPorISBN(isbn) {
-            const url = `https://googleapis.com{isbn}`;
+            // Limpiamos posibles guiones si el código se leyó con formato extendido
+            const isbnLimpio = isbn.replace(/[- ]/g, "");
+            const url = `https://googleapis.com{isbnLimpio}`;
+            
             try {
                 const response = await fetch(url);
                 const data = await response.json();
                 
                 if (data.totalItems > 0) {
-                    const info = data.items[0].volumeInfo; // Corregido: añadida posición exacta del array de items
+                    const info = data.items[0].volumeInfo;
                     libroActual = {
                         titulo: info.title,
                         autores: info.authors ? info.authors.join(', ') : 'Autor desconocido',
@@ -117,10 +110,10 @@
                     document.getElementById('resultado').style.display = 'block';
                     actualizarEstado("¡Libro encontrado!");
                 } else {
-                    actualizarEstado("El código leído no coincide con ningún libro registrado.");
+                    actualizarEstado("Código leído (" + isbnLimpio + "), pero no está registrado en Google Books.");
                 }
             } catch (error) {
-                actualizarEstado("Error de conexión al buscar los datos del libro.");
+                actualizarEstado("Error al conectar con el servidor de Google.");
                 console.error(error);
             }
         }
@@ -129,7 +122,7 @@
             let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
             biblioteca.push(libroActual);
             localStorage.setItem('misLibros', JSON.stringify(biblioteca));
-            actualizarEstado("Libro guardado en el almacenamiento del móvil.");
+            actualizarEstado("Libro guardado en tu móvil.");
             alert("¡Libro guardado con éxito!");
             document.getElementById('resultado').style.display = 'none';
         }

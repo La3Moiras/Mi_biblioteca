@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Biblioteca</title>
+    <!-- Librería para escanear códigos de barras -->
+    <script src="https://unpkg.com"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; text-align: center; }
+        #reader { width: 100%; max-width: 400px; margin: auto; background: white; }
+        .card { background: white; padding: 15px; border-radius: 8px; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: none; }
+        img { max-width: 120px; margin-top: 10px; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 16px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <h1>Escanear Libro</h1>
+    <button onclick="iniciarEscaneo()">Abrir Cámara</button>
+    
+    <div id="reader" style="margin-top: 20px;"></div>
+
+    <!-- Ficha del libro resultado -->
+    <div id="resultado" class="card">
+        <h2 id="libro-titulo"></h2>
+        <p id="libro-autor"></p>
+        <img id="libro-portada" src="" alt="Portada">
+        <br><br>
+        <button onclick="guardarLibro()" style="background: #28a745;">Guardar en Biblioteca</button>
+    </div>
+
+    <script>
+        let html5QrcodeScanner;
+        let libroActual = {};
+
+        function iniciarEscaneo() {
+            html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 150} });
+            html5QrcodeScanner.render(onScanSuccess);
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            // El texto decodificado es el número de ISBN
+            html5QrcodeScanner.clear(); // Detiene la cámara
+            buscarLibroPorISBN(decodedText);
+        }
+
+        async function buscarLibroPorISBN(isbn) {
+            const url = `https://googleapis.com{isbn}`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.totalItems > 0) {
+                    const info = data.items[0].volumeInfo;
+                    libroActual = {
+                        titulo: info.title,
+                        autores: info.authors ? info.authors.join(', ') : 'Autor desconocido',
+                        portada: info.imageLinks ? info.imageLinks.thumbnail : 'https://placeholder.com'
+                    };
+
+                    // Mostrar datos en la interfaz
+                    document.getElementById('libro-titulo').innerText = libroActual.titulo;
+                    document.getElementById('libro-autor').innerText = "Por: " + libroActual.autores;
+                    document.getElementById('libro-portada').src = libroActual.portada;
+                    document.getElementById('resultado').style.display = 'block';
+                } else {
+                    alert("No se encontró ningún libro con ese ISBN en Google Books.");
+                }
+            } catch (error) {
+                console.error("Error al consultar la API:", error);
+            }
+        }
+
+        function guardarLibro() {
+            // Recupera la biblioteca actual del almacenamiento del móvil
+            let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
+            biblioteca.push(libroActual);
+            // Guarda la nueva lista localmente
+            localStorage.setItem('misLibros', JSON.stringify(biblioteca));
+            alert("¡Libro guardado con éxito!");
+            document.getElementById('resultado').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

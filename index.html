@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Biblioteca v1.0.9</title>
+    <title>Mi Biblioteca v1.1.0</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background: #f8f9fa; text-align: center; margin: 0; }
         .container { max-width: 500px; margin: auto; padding: 10px; }
-        
-        /* Versión flotante discreta */
         .version-tag { font-size: 11px; color: #aaa; margin-top: -10px; margin-bottom: 20px; }
         
         #video-container { width: 100%; max-width: 360px; margin: 15px auto; background: #000; border-radius: 12px; overflow: hidden; position: relative; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
@@ -23,15 +21,13 @@
         button:active { background: #0056b3; }
         
         #info-estado { color: #333; font-size: 15px; margin: 15px 0; font-weight: 500; }
-        
-        /* Bloque de ISBN forzado para que no desaparezca */
         #isbn-bloque { background: #e9ecef; padding: 8px 15px; border-radius: 20px; font-weight: bold; color: #495057; margin: 15px auto; font-size: 14px; display: block; max-width: 200px; border: 1px solid #ced4da; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Mi Bibliotecav1.0.9</h1>
-        <div class="version-tag">Versión de la App: v1.0.9</div>
+        <h1>Mi Biblioteca</h1>
+        <div class="version-tag">Versión de la App: v1.1.0</div>
         
         <div id="info-estado">Presiona el botón para iniciar el escáner</div>
         <button id="btn-iniciar" onclick="comenzarEscaneoEnVivo()">Iniciar Escáner en Vivo</button>
@@ -41,9 +37,9 @@
             <div class="laser"></div>
         </div>
 
-        <!-- Caja de ISBN fija y visible permanentemente -->
         <div id="isbn-bloque">ISBN: <span id="num-isbn">Ninguno</span></div>
 
+        <!-- Ficha del libro resultado -->
         <div id="resultado" class="card">
             <h2 id="libro-titulo" style="margin: 0 0 10px 0; font-size: 20px;"></h2>
             <p id="libro-autor" style="color: #555; margin: 0; font-size: 16px;"></p>
@@ -74,12 +70,11 @@
             document.getElementById('btn-iniciar').style.display = 'none';
             document.getElementById('resultado').style.display = 'none';
             document.getElementById('num-isbn').innerText = "Buscando...";
-            actualizarEstado("Abriendo cámara trasera estándar...");
+            actualizarEstado("Abriendo cámara trasera...");
 
             detectorDeCodigos = new BarcodeDetector({ formats: ['ean_13', 'ean_8'] });
 
             try {
-                // CAMBIO CLAVE: Bajamos la resolución para máxima estabilidad en lentes Xiaomi
                 const constraints = {
                     video: {
                         facingMode: "environment",
@@ -115,17 +110,15 @@
             detectorDeCodigos.detect(video)
                 .then(barcodes => {
                     if (barcodes.length > 0 && escaneando) {
-                        const isbnOriginal = barcodes[0].rawValue; // Aseguramos capturar el primer elemento exacto
+                        const isbnOriginal = barcodes[0].rawValue;
                         escaneando = false;
                         detenerCamara();
                         
                         const isbnLimpio = isbnOriginal.trim().replace(/[^0-9X]/gi, "");
-                        
-                        // Actualizamos el cuadro fijo de texto con el número
                         document.getElementById('num-isbn').innerText = isbnLimpio;
                         
-                        actualizarEstado("¡Código leído! Buscando en catálogo abierto...");
-                        buscarLibroPorISBN(isbnLimpio);
+                        actualizarEstado("¡Código leído! Buscando libro...");
+                        buscarLibroDobleMotor(isbnLimpio);
                     } else {
                         animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
                     }
@@ -145,45 +138,64 @@
             document.getElementById('btn-iniciar').style.display = 'block';
         }
 
-        async function buscarLibroPorISBN(isbn) {
-            const url = `https://openlibrary.org{isbn}&jscmd=data&format=json`;
+        async function buscarLibroDobleMotor(isbn) {
+            // MOTOR 1: Intentamos primero con Open Library
+            actualizarEstado("Buscando en Motor 1 (OpenLibrary)...");
+            const urlOL = `https://openlibrary.org{isbn}&jscmd=data&format=json`;
             
             try {
-                const response = await fetch(url);
-                const data = await response.json();
+                const responseOL = await fetch(urlOL);
+                const dataOL = await responseOL.json();
                 const claveLibro = `ISBN:${isbn}`;
                 
-                if (data && data[claveLibro]) {
-                    const info = data[claveLibro];
-                    
+                if (dataOL && dataOL[claveLibro]) {
+                    const info = dataOL[claveLibro];
                     let nombresAutores = 'Autor desconocido';
                     if (info.authors && info.authors.length > 0) {
                         nombresAutores = info.authors.map(a => a.name).join(', ');
                     }
-
                     let urlPortada = 'https://placeholder.com';
                     if (info.cover && info.cover.medium) {
                         urlPortada = info.cover.medium;
                     }
 
-                    libroActual = {
-                        titulo: info.title,
-                        autores: nombresAutores,
-                        portada: urlPortada
-                    };
-
-                    document.getElementById('libro-titulo').innerText = libroActual.titulo;
-                    document.getElementById('libro-autor').innerText = "Por: " + libroActual.autores;
-                    document.getElementById('libro-portada').src = libroActual.portada;
-                    document.getElementById('resultado').style.display = 'block';
-                    actualizarEstado("¡Libro cargado con éxito!");
-                } else {
-                    actualizarEstado("Código leído, pero no está en Open Library.");
+                    mostrarResultado(info.title, nombresAutores, urlPortada);
+                    return; // Termina con éxito
                 }
             } catch (error) {
-                actualizarEstado("Error al procesar los datos de internet.");
-                console.error(error);
+                console.warn("Motor 1 falló, saltando al Motor 2 de respaldo...", error);
             }
+
+            // MOTOR 2: Si el anterior falla o no encuentra el libro, usamos Google Books con url limpia
+            actualizarEstado("Buscando en Motor 2 (Google Books)...");
+            const urlGoogle = `https://googleapis.com{isbn}&country=ES`;
+            
+            try {
+                const responseGoogle = await fetch(urlGoogle);
+                const dataGoogle = await responseGoogle.json();
+                
+                if (dataGoogle && dataGoogle.totalItems > 0) {
+                    const infoG = dataGoogle.items[0].volumeInfo;
+                    let autoresG = infoG.authors ? infoG.authors.join(', ') : 'Autor desconocido';
+                    let portadaG = infoG.imageLinks ? infoG.imageLinks.thumbnail.replace('http://', 'https://') : 'https://placeholder.com';
+                    
+                    mostrarResultado(infoG.title, autoresG, portadaG);
+                } else {
+                    actualizarEstado("El libro no se encuentra en ningún catálogo de internet.");
+                }
+            } catch (error2) {
+                actualizarEstado("Error de conexión total con los servidores de libros.");
+                console.error(error2);
+            }
+        }
+
+        function mostrarResultado(titulo, autores, portada) {
+            libroActual = { titulo: titulo, autores: autores, portada: portada };
+            document.getElementById('libro-titulo').innerText = libroActual.titulo;
+            document.getElementById('libro-autor').innerText = "Por: " + libroActual.autores;
+            document.getElementById('libro-portada').src = libroActual.portada;
+            document.getElementById('resultado').style.display = 'block';
+            actualizarEstado("¡Libro cargado con éxito!");
         }
 
         function guardarLibro() {
@@ -193,6 +205,6 @@
             actualizarEstado("¡Libro guardado!");
             document.getElementById('resultado').style.display = 'none';
         }
-    </script>
+</script>
 </body>
 </html>

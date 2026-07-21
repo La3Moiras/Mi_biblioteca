@@ -19,6 +19,7 @@
         button { background: #007bff; color: white; border: none; padding: 14px 28px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; max-width: 280px; margin: 10px auto; display: block; }
         button:active { background: #0056b3; }
         #info-estado { color: #333; font-size: 15px; margin: 15px 0; font-weight: 500; }
+        #isbn-leido { background: #e9ecef; display: inline-block; padding: 5px 15px; border-radius: 20px; font-weight: bold; color: #495057; margin-bottom: 10px; font-size: 14px; display: none; }
     </style>
 </head>
 <body>
@@ -33,6 +34,9 @@
             <video id="webcam" autoplay playsinline></video>
             <div class="laser"></div>
         </div>
+
+        <!-- Muestra visual del ISBN detectado -->
+        <div id="isbn-leido">ISBN: <span id="num-isbn"></span></div>
 
         <div id="resultado" class="card">
             <h2 id="libro-titulo" style="margin: 0 0 10px 0; font-size: 20px;"></h2>
@@ -63,17 +67,17 @@
 
             document.getElementById('btn-iniciar').style.display = 'none';
             document.getElementById('resultado').style.display = 'none';
+            document.getElementById('isbn-leido').style.display = 'none';
             actualizarEstado("Conectando con la cámara trasera...");
 
             detectorDeCodigos = new BarcodeDetector({ formats: ['ean_13', 'ean_8'] });
 
             try {
-                // CONFIGURACIÓN FLEXIBLE: Usamos 'ideal' en lugar de 'exact' para evitar el cuelgue en Xiaomi
                 const constraints = {
                     video: {
                         facingMode: "environment",
-                        width: { ideal: 640 },
-                        height: { ideal: 480 }
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
                     }
                 };
                 
@@ -104,11 +108,19 @@
             detectorDeCodigos.detect(video)
                 .then(barcodes => {
                     if (barcodes.length > 0 && escaneando) {
-                        const isbn = barcodes[0].rawValue; // Corregido: extracción directa del primer elemento detectado
+                        const isbnOriginal = barcodes[0].rawValue;
                         escaneando = false;
                         detenerCamara();
-                        actualizarEstado("¡Código detectado: " + isbn + "! Buscando libro...");
-                        buscarLibroPorISBN(isbn);
+                        
+                        // Limpieza profunda del número antes de enviarlo a Google o mostrarlo
+                        const isbnLimpio = isbnOriginal.trim().replace(/[^0-9X]/gi, "");
+                        
+                        // Mostrar visualmente el número detectado en la pantalla
+                        document.getElementById('num-isbn').innerText = isbnLimpio;
+                        document.getElementById('isbn-leido').style.display = 'inline-block';
+                        
+                        actualizarEstado("¡Código detectado! Buscando en Google Books...");
+                        buscarLibroPorISBN(isbnLimpio);
                     } else {
                         animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
                     }
@@ -129,9 +141,18 @@
         }
 
         async function buscarLibroPorISBN(isbn) {
+            // Re-verificación de la cadena limpia para evitar errores 400 de red
+            if(!isbn || isbn.length < 8) {
+                actualizarEstado("El código leído es demasiado corto o inválido.");
+                return;
+            }
+
             const url = `https://googleapis.com{isbn}`;
             try {
                 const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error("HTTP error " + response.status);
+                }
                 const data = await response.json();
                 
                 if (data.totalItems > 0) {
@@ -148,11 +169,11 @@
                     document.getElementById('resultado').style.display = 'block';
                     actualizarEstado("¡Libro encontrado!");
                 } else {
-                    actualizarEstado("Código leído (" + isbn + "), pero no está en Google Books.");
+                    actualizarEstado("Código leído (" + isbn + "), pero no está en la base de datos.");
                 }
             } catch (error) {
-                actualizarEstado("Error al conectar con Google Books.");
-                console.error(error);
+                actualizarEstado("Error de red o conexión al buscar los datos del libro.");
+                console.error("Detalle del error:", error);
             }
         }
 

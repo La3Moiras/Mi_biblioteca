@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Biblioteca v1.2.1</title>
+    <title>Mi Biblioteca v1.2.2</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background: #f8f9fa; text-align: center; margin: 0; padding-bottom: 80px; }
         .container { max-width: 500px; margin: auto; padding: 10px; }
@@ -44,7 +44,7 @@
         <!-- SECCIÓN 1: ESCÁNER -->
         <div id="sec-escaner" class="seccion activa">
             <h1>Mi Biblioteca</h1>
-            <div class="version-tag">Versión de la App: v1.2.1</div>
+            <div class="version-tag">Versión de la App: v1.2.2</div>
             
             <div id="info-estado">Presiona el botón para iniciar el escáner</div>
             <button id="btn-iniciar" onclick="comenzarEscaneoEnVivo()">Iniciar Escáner en Vivo</button>
@@ -184,7 +184,35 @@
                     
                     mostrarResultado(info.title, autores, portada);
                 } else {
-buscarEnRespaldoGoogle(isbn);}} catch (error) {buscarEnRespaldoGoogle(isbn);}}async function buscarEnRespaldoGoogle(isbn) {const proxy = "allorigins.win";const urlFinal = encodeURIComponent(https://googleapis.com{isbn});try {const response = await fetch(proxy + urlFinal);const resData = await response.json();const data = JSON.parse(resData.contents);// CORREGIDO: Se añade la verificación del índice [0] para evitar fallos de inicializaciónif (data && data.totalItems > 0 && data.items && data.items[0]) {const infoG = data.items[0].volumeInfo;let autoresG = infoG.authors ? infoG.authors.join(', ') : 'Autor desconocido';let portadaG = infoG.imageLinks && infoG.imageLinks.thumbnail ? infoG.imageLinks.thumbnail.replace('http://', 'https://') : 'placeholder.com';mostrarResultado(infoG.title, autoresG, portadaG);} else {actualizarEstado("Este libro no aparece en los catálogos digitales.");}} catch (error) {actualizarEstado("Error al procesar la búsqueda. Inténtalo de nuevo.");console.error(error);}}function mostrarResultado(titulo, autores, portada) {libroActual = { titulo: titulo, autores: autores, portada: portada };document.getElementById('libro-titulo').innerText = libroActual.titulo;document.getElementById('libro-autor').innerText = "Por: " + libroActual.autores;document.getElementById('libro-portada').src = libroActual.portada;document.getElementById('resultado').style.display = 'block';actualizarEstado("¡Libro cargado con éxito!");}function guardarLibro() {let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];biblioteca.push(libroActual);localStorage.setItem('misLibros', JSON.stringify(biblioteca));actualizarEstado("¡Libro guardado!");document.getElementById('resultado').style.display = 'none';document.getElementById('num-isbn').innerText = "Ninguno";}function renderizarEstanteria() {const contenedor = document.getElementById('contenedor-estanteria');const avisoVacio = document.getElementById('lista-vacia');let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];contenedor.innerHTML = "";if (biblioteca.length === 0) {avisoVacio.style.display = "block";return;}avisoVacio.style.display = "none";biblioteca.forEach(libro => {const divCard = document.createElement('div');divCard.className = 'item-libro';divCard.innerHTML = <img src="${libro.portada}" alt="Portada"> <p class="item-titulo">${libro.titulo}</p> <p class="item-autor">${libro.autores}</p>;contenedor.appendChild(divCard);});}
+buscarEnRespaldoGoogle(isbn);
+                }
+            } 
+            catch (error) {buscarEnRespaldoGoogle(isbn);
+                          }
+        }
+        async function buscarEnRespaldoGoogle(isbn) {const proxy = "allorigins.win";
+                                                     const urlFinal = encodeURIComponent(https://googleapis.com{isbn});
+                                                                                         try {const response = await fetch(proxy + urlFinal);
+                                                                                              const resData = await response.json();
+                                                                                              const data = JSON.parse(resData.contents);
+                                                                                              // CORRECCIÓN ABSOLUTA: Validación correcta del array indexado de Google Books
+                                                                                              if (data && data.totalItems > 0 && data.items && data.items[0]) {const infoG = data.items[0].volumeInfo;
+                                                                                                                                                               let autoresG = infoG.authors ? infoG.authors.join(', ') : 'Autor desconocido';
+                                                                                                                                                               let portadaG = infoG.imageLinks && infoG.imageLinks.thumbnail ? infoG.imageLinks.thumbnail.replace('http://', 'https://') : 'placeholder.com';
+                                                                                                                                                               mostrarResultado(infoG.title, autoresG, portadaG);
+                                                                                                                                                              } else {
+                                                                                                  actualizarEstado("Este libro no aparece en los catálogos digitales.");
+                                                                                              }
+                                                                                             } 
+                                                     catch (error) {actualizarEstado("Error al procesar la búsqueda. Inténtalo de nuevo.");
+                                                                    console.error(error);
+                                                                   }
+                                                    }
+        function mostrarResultado(titulo, autores, portada) {libroActual = { titulo: titulo, autores: autores, portada: portada };
+                                                             document.getElementById('libro-titulo').innerText = libroActual.titulo;
+                                                             document.getElementById('libro-autor').innerText = "Por: " + libroActual.autores;
+                                                             document.getElementById('libro-portada').src = libroActual.portada;document.getElementById('resultado').style.display = 'block';actualizarEstado("¡Libro cargado con éxito!");}function guardarLibro() {let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];biblioteca.push(libroActual);localStorage.setItem('misLibros', JSON.stringify(biblioteca));actualizarEstado("¡Libro guardado!");document.getElementById('resultado').style.display = 'none';document.getElementById('num-isbn').innerText = "Ninguno";}function renderizarEstanteria() {const contenedor = document.getElementById('contenedor-estanteria');const avisoVacio = document.getElementById('lista-vacia');let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];contenedor.innerHTML = "";if (biblioteca.length === 0) {avisoVacio.style.display = "block";return;}avisoVacio.style.display = "none";biblioteca.forEach(libro => {const divCard = document.createElement('div');divCard.className = 'item-libro';divCard.innerHTML = <img src="${libro.portada}" alt="Portada"> <p class="item-titulo">${libro.titulo}</p> <p class="item-autor">${libro.autores}</p>;contenedor.appendChild(divCard);});}
+
 </script>
 </body>
 </html>

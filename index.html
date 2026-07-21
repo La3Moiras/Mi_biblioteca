@@ -3,18 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Biblioteca - Escáner en Vivo</title>
+    <title>Mi Biblioteca - Escáner Estable</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background: #f8f9fa; text-align: center; margin: 0; }
         .container { max-width: 500px; margin: auto; padding: 10px; }
         
-        /* Contenedor del video en vivo */
         #video-container { width: 100%; max-width: 360px; margin: 15px auto; background: #000; border-radius: 12px; overflow: hidden; position: relative; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         video { width: 100%; height: auto; display: block; }
         
-        /* Línea roja visual de guía tipo escáner */
         .laser { position: absolute; top: 50%; left: 5%; width: 90%; height: 2px; background-color: red; box-shadow: 0 0 8px red; animation: laserAnim 2s infinite alternate; }
-        @keyframes laserAnim { from { top: 30%; } to { top: 70%; } }
+        @keyframes laserAnim { from { top: 35%; } to { top: 65%; } }
 
         .card { background: white; padding: 20px; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: none; }
         img { max-width: 130px; margin-top: 15px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
@@ -31,13 +29,11 @@
         <div id="info-estado">Presiona el botón para iniciar el escáner</div>
         <button id="btn-iniciar" onclick="comenzarEscaneoEnVivo()">Iniciar Escáner en Vivo</button>
         
-        <!-- Visor de la cámara en vivo dentro de la pantalla -->
         <div id="video-container">
             <video id="webcam" autoplay playsinline></video>
             <div class="laser"></div>
         </div>
 
-        <!-- Ficha del libro resultado -->
         <div id="resultado" class="card">
             <h2 id="libro-titulo" style="margin: 0 0 10px 0; font-size: 20px;"></h2>
             <p id="libro-autor" style="color: #555; margin: 0; font-size: 16px;"></p>
@@ -60,26 +56,24 @@
         }
 
         async function comenzarEscaneoEnVivo() {
-            // Verificar si el navegador soporta el detector nativo de códigos de barras de Google
             if (!('BarcodeDetector' in window)) {
-                actualizarEstado("Tu navegador no soporta escaneo nativo en vivo. Prueba actualizando Chrome.");
+                actualizarEstado("Tu navegador no soporta escaneo nativo. Asegúrate de usar Chrome actualizado.");
                 return;
             }
 
             document.getElementById('btn-iniciar').style.display = 'none';
             document.getElementById('resultado').style.display = 'none';
-            actualizarEstado("Iniciando cámara trasera...");
+            actualizarEstado("Conectando con la cámara trasera...");
 
-            // Configurar el detector específicamente para formatos de libros (EAN_13 / ISBN)
             detectorDeCodigos = new BarcodeDetector({ formats: ['ean_13', 'ean_8'] });
 
             try {
-                // Solicitar directamente el flujo de vídeo nativo de la cámara trasera
+                // CONFIGURACIÓN FLEXIBLE: Usamos 'ideal' en lugar de 'exact' para evitar el cuelgue en Xiaomi
                 const constraints = {
                     video: {
-                        facingMode: { exact: "environment" },
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
+                        facingMode: "environment",
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
                     }
                 };
                 
@@ -88,17 +82,16 @@
                 video.srcObject = streamActual;
                 
                 document.getElementById('video-container').style.display = 'block';
-                actualizarEstado("¡Escáner activo! Enfoca el código de barras del libro...");
+                actualizarEstado("¡Escáner activo! Enfoca el código de barras...");
                 escaneando = true;
 
-                // Iniciar el bucle de detección en vivo cuadro por cuadro
                 video.onloadedmetadata = () => {
                     procesarFrameEnVivo();
                 };
 
             } catch (err) {
                 console.error(err);
-                actualizarEstado("Error de cámara: Asegúrate de otorgar los permisos necesarios.");
+                actualizarEstado("No se pudo mantener abierta la cámara. Revisa los permisos.");
                 document.getElementById('btn-iniciar').style.display = 'block';
             }
         }
@@ -108,18 +101,15 @@
 
             const video = document.getElementById('webcam');
             
-            // Analizar el fotograma actual del vídeo
             detectorDeCodigos.detect(video)
                 .then(barcodes => {
                     if (barcodes.length > 0 && escaneando) {
-                        // ¡Código de barras detectado en vivo!
-                        const isbn = barcodes[0].rawValue;
-                        escaneando = false; // Detener escaneo temporalmente para procesar
+                        const isbn = barcodes[0].rawValue; // Corregido: extracción directa del primer elemento detectado
+                        escaneando = false;
                         detenerCamara();
                         actualizarEstado("¡Código detectado: " + isbn + "! Buscando libro...");
                         buscarLibroPorISBN(isbn);
                     } else {
-                        // Seguir analizando el siguiente fotograma
                         animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
                     }
                 })
@@ -156,9 +146,9 @@
                     document.getElementById('libro-autor').innerText = "Por: " + libroActual.autores;
                     document.getElementById('libro-portada').src = libroActual.portada;
                     document.getElementById('resultado').style.display = 'block';
-                    actualizarEstado("¡Libro encontrado con éxito!");
+                    actualizarEstado("¡Libro encontrado!");
                 } else {
-                    actualizarEstado("Código leído (" + isbn + "), pero no está registrado.");
+                    actualizarEstado("Código leído (" + isbn + "), pero no está en Google Books.");
                 }
             } catch (error) {
                 actualizarEstado("Error al conectar con Google Books.");

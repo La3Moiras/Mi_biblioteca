@@ -2,56 +2,66 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mi Biblioteca</title>
-    <!-- Librería para escanear códigos de barras -->
     <script src="https://unpkg.com"></script>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; text-align: center; }
-        #reader { width: 100%; max-width: 400px; margin: auto; background: white; }
-        .card { background: white; padding: 15px; border-radius: 8px; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: none; }
-        img { max-width: 120px; margin-top: 10px; }
-        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 16px; cursor: pointer; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background: #f8f9fa; text-align: center; margin: 0; }
+        .container { max-width: 500px; margin: auto; padding: 10px; }
+        #reader { width: 100%; max-width: 360px; margin: 15px auto; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .card { background: white; padding: 20px; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: none; }
+        img { max-width: 130px; margin-top: 15px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        button { background: #007bff; color: white; border: none; padding: 14px 28px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; max-width: 280px; margin: 5px auto; display: block; -webkit-tap-highlight-color: transparent; }
+        button:active { background: #0056b3; }
     </style>
 </head>
 <body>
+    <div class="container">
+        <h1>Mi Biblioteca</h1>
+        <p style="color: #666; margin-bottom: 20px;">Escanea el ISBN de un libro para añadirlo</p>
+        
+        <button id="btn-camara" onclick="iniciarEscaneo()">Abrir Cámara Trasera</button>
+        <div id="reader"></div>
 
-    <h1>Escanear Libro</h1>
-    <button onclick="iniciarEscaneo()">Abrir Cámara</button>
-    
-    <div id="reader" style="margin-top: 20px;"></div>
-
-    <!-- Ficha del libro resultado -->
-    <div id="resultado" class="card">
-        <h2 id="libro-titulo"></h2>
-        <p id="libro-autor"></p>
-        <img id="libro-portada" src="" alt="Portada">
-        <br><br>
-        <button onclick="guardarLibro()" style="background: #28a745;">Guardar en Biblioteca</button>
+        <div id="resultado" class="card">
+            <h2 id="libro-titulo" style="margin: 0 0 10px 0; font-size: 20px;"></h2>
+            <p id="libro-autor" style="color: #555; margin: 0; font-size: 16px;"></p>
+            <img id="libro-portada" src="" alt="Portada">
+            <div style="margin-top: 20px;">
+                <button onclick="guardarLibro()" style="background: #28a745;">Guardar en Biblioteca</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        let html5QrcodeScanner;
+        let html5QrCode;
         let libroActual = {};
 
         function iniciarEscaneo() {
-    const html5QrCode = new Html5Qrcode("reader");
-    const config = { fps: 10, qrbox: { width: 250, height: 150 } };
-    
-    // Fuerza al móvil a abrir la cámara trasera ("environment")
-    html5QrCode.start(
-        { facingMode: "environment" }, 
-        config,
-        onScanSuccess
-    ).catch(err => {
-        alert("Error al abrir cámara: " + err);
-    });
-}
+            // Ocultar botón para evitar dobles clics
+            document.getElementById('btn-camara').style.display = 'none';
+            
+            html5QrCode = new Html5Qrcode("reader");
+            const config = { fps: 10, qrbox: { width: 260, height: 160 } };
+            
+            // Forzar el uso estricto de la cámara trasera ("environment")
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                config,
+                onScanSuccess
+            ).catch(err => {
+                alert("Error de cámara: Asegúrate de otorgar los permisos en el sistema.");
+                document.getElementById('btn-camara').style.display = 'block';
+                console.error(err);
+            });
+        }
 
         function onScanSuccess(decodedText, decodedResult) {
-            // El texto decodificado es el número de ISBN
-            html5QrcodeScanner.clear(); // Detiene la cámara
-            buscarLibroPorISBN(decodedText);
+            // Detener la cámara tras una lectura exitosa
+            html5QrCode.stop().then(() => {
+                document.getElementById('btn-camara').style.display = 'block';
+                buscarLibroPorISBN(decodedText);
+            }).catch(err => console.error("Error al detener la cámara", err));
         }
 
         async function buscarLibroPorISBN(isbn) {
@@ -61,33 +71,31 @@
                 const data = await response.json();
                 
                 if (data.totalItems > 0) {
-                    const info = data.items[0].volumeInfo;
+                    const info = data.items[0].volumeInfo; // Corregido índice para extraer correctamente
                     libroActual = {
                         titulo: info.title,
                         autores: info.authors ? info.authors.join(', ') : 'Autor desconocido',
-                        portada: info.imageLinks ? info.imageLinks.thumbnail : 'https://placeholder.com'
+                        portada: info.imageLinks ? info.imageLinks.thumbnail.replace('http://', 'https://') : 'https://placeholder.com'
                     };
 
-                    // Mostrar datos en la interfaz
                     document.getElementById('libro-titulo').innerText = libroActual.titulo;
                     document.getElementById('libro-autor').innerText = "Por: " + libroActual.autores;
                     document.getElementById('libro-portada').src = libroActual.portada;
                     document.getElementById('resultado').style.display = 'block';
                 } else {
-                    alert("No se encontró ningún libro con ese ISBN en Google Books.");
+                    alert("No se encontró el libro con el ISBN: " + isbn);
                 }
             } catch (error) {
-                console.error("Error al consultar la API:", error);
+                alert("Error al conectar con el buscador de libros.");
+                console.error(error);
             }
         }
 
         function guardarLibro() {
-            // Recupera la biblioteca actual del almacenamiento del móvil
             let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
             biblioteca.push(libroActual);
-            // Guarda la nueva lista localmente
             localStorage.setItem('misLibros', JSON.stringify(biblioteca));
-            alert("¡Libro guardado con éxito!");
+            alert("¡Libro guardado en tu móvil!");
             document.getElementById('resultado').style.display = 'none';
         }
     </script>

@@ -35,9 +35,18 @@
         let libroActual = {};
 
         function iniciarEscaneo() {
-            html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 150} });
-            html5QrcodeScanner.render(onScanSuccess);
-        }
+    const html5QrCode = new Html5Qrcode("reader");
+    const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+    
+    // Fuerza al móvil a abrir la cámara trasera ("environment")
+    html5QrCode.start(
+        { facingMode: "environment" }, 
+        config,
+        onScanSuccess
+    ).catch(err => {
+        alert("Error al abrir cámara: " + err);
+    });
+}
 
         function onScanSuccess(decodedText, decodedResult) {
             // El texto decodificado es el número de ISBN

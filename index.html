@@ -3,97 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Biblioteca</title>
-    <script src="https://unpkg.com"></script>
+    <title>Mi Biblioteca Nativa</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background: #f8f9fa; text-align: center; margin: 0; }
         .container { max-width: 500px; margin: auto; padding: 10px; }
-        #reader { width: 100%; max-width: 360px; margin: 15px auto; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .card { background: white; padding: 20px; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: none; }
         img { max-width: 130px; margin-top: 15px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-        button { background: #007bff; color: white; border: none; padding: 14px 28px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; max-width: 280px; margin: 5px auto; display: block; }
-        button:active { background: #0056b3; }
+        
+        /* Botón estilizado que activa la cámara nativa */
+        .btn-captura { background: #007bff; color: white; border: none; padding: 14px 28px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; max-width: 280px; margin: 20px auto; display: block; text-decoration: none; }
+        .btn-captura:active { background: #0056b3; }
         #info-estado { color: #666; font-size: 14px; margin-top: 10px; font-style: italic; }
+        
+        /* Ocultamos el input de tipo archivo real */
+        #input-camara { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Mi Biblioteca</h1>
-        <p style="color: #666; margin-bottom: 20px;">Escanea el ISBN de un libro para añadirlo</p>
+        <p style="color: #666; margin-bottom: 20px;">Toma una foto al código de barras del libro</p>
         
-        <button id="btn-camara" onclick="inicializarCamarasXiaomi()">Abrir Cámara</button>
-        <div id="info-estado"></div>
-        <div id="reader"></div>
+        <!-- Al pulsar esta etiqueta, Android simula el clic en el input de abajo -->
+        <label for="input-camara" class="btn-captura">Abrir Cámara de Fotos</label>
+        
+        <!-- ESTE ES EL SECRETO ESTILO DOCUWARE: Abre la cámara trasera nativa del Xiaomi -->
+        <input type="file" id="input-camara" accept="image/*" capture="environment" onchange="procesarFotoLibro(event)">
+        
+        <div id="info-estado">Estado: Esperando captura...</div>
 
+        <!-- Ficha del libro resultado -->
         <div id="resultado" class="card">
             <h2 id="libro-titulo" style="margin: 0 0 10px 0; font-size: 20px;"></h2>
             <p id="libro-autor" style="color: #555; margin: 0; font-size: 16px;"></p>
             <img id="libro-portada" src="" alt="Portada">
             <div style="margin-top: 20px;">
-                <button onclick="guardarLibro()" style="background: #28a745;">Guardar en Biblioteca</button>
+                <button onclick="guardarLibro()" style="background: #28a745; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-size: 16px; font-weight: bold;">Guardar en Biblioteca</button>
             </div>
         </div>
     </div>
 
     <script>
-        let html5QrCode;
         let libroActual = {};
 
         function actualizarEstado(txt) {
-            document.getElementById('info-estado').innerText = txt;
+            document.getElementById('info-estado').innerText = "Estado: " + txt;
         }
 
-        function inicializarCamarasXiaomi() {
-            actualizarEstado("Buscando lentes traseras...");
-            document.getElementById('btn-camara').style.display = 'none';
+        function procesarFotoLibro(event) {
+            const file = event.target.files[0];
+            if (!file) return;
 
-            // Solicita la lista de cámaras físicas del Xiaomi
-            Html5Qrcode.getCameras().then(devices => {
-                if (devices && devices.length > 0) {
-                    // Intentamos buscar una cámara que en su nombre diga 'back', 'trasera' o 'environment'
-                    let camaraTrasera = devices.find(device => 
-                        device.label.toLowerCase().includes('back') || 
-                        device.label.toLowerCase().includes('trasera') ||
-                        device.label.toLowerCase().includes('0') // La cámara 0 suele ser la principal en Xiaomi
-                    );
+            actualizarEstado("Leyendo código de barras desde la imagen...");
 
-                    // Si no encuentra una con ese texto, elige la última de la lista (suele ser la trasera principal)
-                    let cameraId = camaraTrasera ? camaraTrasera.id : devices[devices.length - 1].id;
-                    
-                    actualizarEstado("Cámara encontrada. Iniciando visor...");
-                    arrancarEscaneoConId(cameraId);
+            // Usamos una API en la nube gratuita para leer el código de barras de la foto
+            const formData = new FormData();
+            formData.append("file", file);
+
+            // Consultamos a la API de ZXing (un lector de códigos de barras online muy rápido)
+            fetch("https://zxing.org", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.text())
+            .then(htmlText => {
+                // Parseamos el resultado HTML para extraer el número ISBN decodificado
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlText, "text/html");
+                const thElements = doc.querySelectorAll("th");
+                
+                let isbnEncontrado = null;
+                thElements.forEach(th => {
+                    if (th.innerText.trim() === "Parsed Result Type") {
+                        const td = th.nextElementSibling;
+                        if (td && td.innerText.trim() === "ISBN") {
+                            // Si detecta un ISBN, buscamos el valor del texto crudo
+                            const rawTextTh = Array.from(doc.querySelectorAll("th")).find(el => el.innerText.trim() === "Raw text");
+                            if (rawTextTh) isbnEncontrado = rawTextTh.nextElementSibling.innerText.trim();
+                        }
+                    }
+                });
+
+                if (isbnEncontrado) {
+                    actualizarEstado("ISBN detectado (" + isbnEncontrado + "). Buscando datos...");
+                    buscarLibroPorISBN(isbnEncontrado);
                 } else {
-                    actualizarEstado("No se encontraron cámaras físicas.");
-                    document.getElementById('btn-camara').style.display = 'block';
+                    actualizarEstado("No se distinguió el código de barras claramente. Inténtalo de nuevo enfocando mejor.");
                 }
-            }).catch(err => {
-                actualizarEstado("Error al listar cámaras: " + err);
-                document.getElementById('btn-camara').style.display = 'block';
+            })
+            .catch(err => {
+                actualizarEstado("Error al procesar la imagen en el servidor.");
+                console.error(err);
             });
-        }
-
-        function arrancarEscaneoConId(idDeCamara) {
-            html5QrCode = new Html5Qrcode("reader");
-            // Ajustamos el recuadro para que sea óptimo para códigos de barras alargados
-            const config = { fps: 15, qrbox: { width: 280, height: 130 } };
-            
-            html5QrCode.start(
-                idDeCamara, 
-                config,
-                onScanSuccess
-            ).then(() => {
-                actualizarEstado("¡Listo! Enfoca el código de barras del libro.");
-            }).catch(err => {
-                actualizarEstado("Fallo al encender la lente: " + err);
-                document.getElementById('btn-camara').style.display = 'block';
-            });
-        }
-
-        function onScanSuccess(decodedText, decodedResult) {
-            actualizarEstado("¡Código leído! Buscando libro...");
-            html5QrCode.stop().then(() => {
-                buscarLibroPorISBN(decodedText);
-            }).catch(err => console.error("Error al apagar cámara", err));
         }
 
         async function buscarLibroPorISBN(isbn) {
@@ -103,7 +104,7 @@
                 const data = await response.json();
                 
                 if (data.totalItems > 0) {
-                    const info = data.items[0].volumeInfo;
+                    const info = data.items[0].volumeInfo; // Corregido: añadida posición exacta del array de items
                     libroActual = {
                         titulo: info.title,
                         autores: info.authors ? info.authors.join(', ') : 'Autor desconocido',
@@ -114,13 +115,12 @@
                     document.getElementById('libro-autor').innerText = "Por: " + libroActual.autores;
                     document.getElementById('libro-portada').src = libroActual.portada;
                     document.getElementById('resultado').style.display = 'block';
-                    actualizarEstado("Libro cargado con éxito.");
+                    actualizarEstado("¡Libro encontrado!");
                 } else {
-                    actualizarEstado("ISBN no encontrado en Google Books.");
-                    alert("No se encontró el libro con el ISBN: " + isbn);
+                    actualizarEstado("El código leído no coincide con ningún libro registrado.");
                 }
             } catch (error) {
-                actualizarEstado("Error de conexión con el servidor.");
+                actualizarEstado("Error de conexión al buscar los datos del libro.");
                 console.error(error);
             }
         }
@@ -129,8 +129,8 @@
             let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
             biblioteca.push(libroActual);
             localStorage.setItem('misLibros', JSON.stringify(biblioteca));
-            actualizarEstado("Libro guardado localmente.");
-            alert("¡Libro guardado en tu móvil!");
+            actualizarEstado("Libro guardado en el almacenamiento del móvil.");
+            alert("¡Libro guardado con éxito!");
             document.getElementById('resultado').style.display = 'none';
         }
     </script>

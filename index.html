@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Biblioteca v1.4.2</title>
+    <title>Mi Biblioteca v1.4.3</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background: #f8f9fa; text-align: center; margin: 0; }
         .container { max-width: 500px; margin: auto; padding: 10px; }
@@ -27,7 +27,7 @@
 <body>
     <div class="container">
         <h1>Mi Biblioteca</h1>
-        <div class="version-tag">Versión de la App: v1.4.2</div>
+        <div class="version-tag">Versión de la App: v1.4.3</div>
         
         <button id="btn-iniciar" onclick="comenzarEscaneoEnVivo()">Iniciar Escáner en Vivo</button>
         
@@ -36,10 +36,7 @@
             <div class="laser"></div>
         </div>
 
-        <!-- 1. Cuadro de ISBN fijo -->
         <div id="isbn-bloque">ISBN: <span id="num-isbn">Ninguno</span></div>
-        
-        <!-- 2. Línea de estado justo debajo -->
         <div id="info-estado">Estado: En espera...</div>
 
         <div id="resultado" class="card">
@@ -112,16 +109,14 @@
             detectorDeCodigos.detect(video)
                 .then(barcodes => {
                     if (barcodes.length > 0 && escaneando) {
-                        const isbnOriginal = barcodes[0].rawValue;
+                        const isbnOriginal = barcodes.rawValue;
                         escaneando = false;
                         detenerCamara();
                         
-                        // MODIFICACIÓN SOLICITADA: Limpiamos y dejamos fijo el ISBN leído en su recuadro
                         const isbnLimpio = isbnOriginal.trim().replace(/[^0-9X]/gi, "");
-                        document.getElementById('num-isbn').innerText = isbnLinter = isbnLimpio;
+                        document.getElementById('num-isbn').innerText = isbnLimpio;
                         
-                        // La acción de búsqueda se muestra abajo, sin alterar el número superior
-                        actualizarEstado("Consultando catálogo de Google...");
+                        actualizarEstado("Descargando ficha de libro por túnel seguro...");
                         buscarLibroPorISBN(isbnLimpio);
                     } else {
                         animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
@@ -143,10 +138,11 @@
         }
 
         async function buscarLibroPorISBN(isbn) {
-            const url = `https://googleapis.com{isbn}`;
-            
+            // SOLUCIÓN AL ERROR DE COMUNICACIÓN: Usamos un túnel limpio con corsproxy.io para saltarnos el bloqueo
+            const destinoAPI = `https://googleapis.com{isbn}`;
+            const urlConProxy = `https://corsproxy.io/?url=${encodeURIComponent(destinoAPI)}`;
             try {
-                const response = await fetch(url);
+                const response = await fetch(urlConProxy);
                 const data = await response.json();
                 
                 if (data && data.totalItems > 0 && data.items && data.items[0]) {
@@ -175,10 +171,10 @@
                     
                     actualizarEstado("¡Libro cargado con éxito!");
                 } else {
-                    actualizarEstado("No encontrado en Google Books.");
+                    actualizarEstado("No encontrado en el registro global.");
                 }
             } catch (error) {
-                actualizarEstado("Fallo en la comunicación con el servidor.");
+                actualizarEstado("Error crítico al procesar la respuesta.");
                 console.error(error);
             }
         }

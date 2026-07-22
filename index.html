@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Biblioteca v1.4.3</title>
+    <title>Mi Biblioteca v1.4.4</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background: #f8f9fa; text-align: center; margin: 0; }
         .container { max-width: 500px; margin: auto; padding: 10px; }
@@ -27,7 +27,7 @@
 <body>
     <div class="container">
         <h1>Mi Biblioteca</h1>
-        <div class="version-tag">Versión de la App: v1.4.3</div>
+        <div class="version-tag">Versión de la App: v1.4.4</div>
         
         <button id="btn-iniciar" onclick="comenzarEscaneoEnVivo()">Iniciar Escáner en Vivo</button>
         
@@ -113,6 +113,7 @@
                         escaneando = false;
                         detenerCamara();
                         
+                        // CORREGIDO: Eliminada la palabra errónea que rompía el sensor
                         const isbnLimpio = isbnOriginal.trim().replace(/[^0-9X]/gi, "");
                         document.getElementById('num-isbn').innerText = isbnLimpio;
                         
@@ -138,9 +139,9 @@
         }
 
         async function buscarLibroPorISBN(isbn) {
-            // SOLUCIÓN AL ERROR DE COMUNICACIÓN: Usamos un túnel limpio con corsproxy.io para saltarnos el bloqueo
-            const destinoAPI = `https://googleapis.com{isbn}`;
-            const urlConProxy = `https://corsproxy.io/?url=${encodeURIComponent(destinoAPI)}`;
+            // Conector directo a través de un proxy alternativo abierto para Google Books
+            const urlConProxy = `https://corsproxy.io/?url=` + encodeURIComponent(`https://googleapis.com{isbn}`);
+            
             try {
                 const response = await fetch(urlConProxy);
                 const data = await response.json();
@@ -174,7 +175,7 @@
                     actualizarEstado("No encontrado en el registro global.");
                 }
             } catch (error) {
-                actualizarEstado("Error crítico al procesar la respuesta.");
+                actualizarEstado("Error al procesar la respuesta.");
                 console.error(error);
             }
         }

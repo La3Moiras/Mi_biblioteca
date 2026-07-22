@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Biblioteca v1.5.1</title>
+    <title>Mi Biblioteca v1.5.2</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background: #f8f9fa; text-align: center; margin: 0; }
         .container { max-width: 500px; margin: auto; padding: 10px; }
@@ -15,6 +15,11 @@
         .laser { position: absolute; top: 50%; left: 5%; width: 90%; height: 2px; background-color: red; box-shadow: 0 0 8px red; animation: laserAnim 2s infinite alternate; }
         @keyframes laserAnim { from { top: 35%; } to { top: 65%; } }
 
+        .card { background: white; padding: 20px; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: none; }
+        img { max-width: 130px; margin-top: 15px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        button { background: #007bff; color: white; border: none; padding: 14px 28px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; max-width: 280px; margin: 10px auto; display: block; }
+        button:active { background: #0056b3; }
+        
         #isbn-bloque { background: #e9ecef; padding: 8px 15px; border-radius: 20px; font-weight: bold; color: #495057; margin: 15px auto 5px auto; font-size: 14px; display: block; max-width: 200px; border: 1px solid #ced4da; }
         #info-estado { color: #555; font-size: 14px; margin: 5px 0 15px 0; font-weight: 500; font-style: italic; }
         
@@ -25,7 +30,7 @@
 <body>
     <div class="container">
         <h1>Mi Biblioteca</h1>
-        <div class="version-tag">Versión de la App: v1.5.1</div>
+        <div class="version-tag">Versión de la App: v1.5.2</div>
         
         <button id="btn-iniciar" onclick="comenzarEscaneoEnVivo()">Iniciar Escáner en Vivo</button>
         
@@ -101,21 +106,22 @@
             detectorDeCodigos.detect(video)
                 .then(barcodes => {
                     if (barcodes.length > 0 && escaneando) {
-                        // ORDEN DE APAGADO EXACTO DE LA VERSIÓN 1.4.9 (FUNCIONABA OK)
+                        // DETECCIÓN EXITOSA: Frenamos en seco antes de cualquier otra cosa
                         escaneando = false;
                         const isbnOriginal = barcodes.rawValue;
                         
+                        // DESTRUCCIÓN DE INSTANCIAS: Forzamos la muerte del hardware de la cámara
                         detectorDeCodigos = null; 
                         detenerCamara();
                         
                         const isbnLimpio = isbnOriginal.trim().replace(/[^0-9X]/gi, "");
                         document.getElementById('num-isbn').innerText = isbnLimpio;
                         
-                        actualizarEstado("Imprimiendo datos crudos recibidos...");
+                        actualizarEstado("Descargando ficha de libro por túnel seguro...");
                         
-                        // Retrasamos un suspiro el diagnóstico para que el hardware respire
+                        // Retrasamos la petición 150ms para asegurar que el Xiaomi liberó la cámara
                         setTimeout(() => {
-                            imprimirTextoCrudoServidor(isbnLimpio);
+                            buscarLibroPorISBN(isbnLimpio);
                         }, 150);
                     } else {
                         if (escaneando) {
@@ -144,9 +150,9 @@
             document.getElementById('btn-iniciar').style.display = 'block';
         }
 
-        async function imprimirTextoCrudoServidor(isbn) {
-            const apiDestino = "https://googleapis.com:" + isbn;
-            const urlConProxy = "https://corsproxy.io" + encodeURIComponent(apiDestino);
+        async function buscarLibroPorISBN(isbn) {
+            const destinoAPI = "https://googleapis.com:" + isbn;
+            const urlConProxy = "https://corsproxy.io" + encodeURIComponent(destinoAPI);
             const panelDebug = document.getElementById('caja-debug');
             
             try {

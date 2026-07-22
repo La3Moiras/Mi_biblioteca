@@ -3,51 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Biblioteca v1.3.0</title>
-    <!-- Cargamos los estilos y el cerebro de la app de forma externa y segura -->
-    <link rel="stylesheet" href="https://jsdelivr.net">
-    <script src="https://jsdelivr.net" defer></script>
+    <title>Mi Biblioteca v1.4.0</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background: #f8f9fa; text-align: center; margin: 0; }
+        .container { max-width: 500px; margin: auto; padding: 10px; }
+        .version-tag { font-size: 11px; color: #aaa; margin-top: -10px; margin-bottom: 20px; }
+        
+        #video-container { width: 100%; max-width: 360px; margin: 15px auto; background: #000; border-radius: 12px; overflow: hidden; position: relative; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        video { width: 100%; height: auto; display: block; }
+        
+        .laser { position: absolute; top: 50%; left: 5%; width: 90%; height: 2px; background-color: red; box-shadow: 0 0 8px red; animation: laserAnim 2s infinite alternate; }
+        @keyframes laserAnim { from { top: 35%; } to { top: 65%; } }
+
+        .card { background: white; padding: 20px; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: none; }
+        img { max-width: 130px; margin-top: 15px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        button { background: #007bff; color: white; border: none; padding: 14px 28px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; max-width: 280px; margin: 10px auto; display: block; }
+        button:active { background: #0056b3; }
+        
+        #info-estado { color: #333; font-size: 15px; margin: 15px 0; font-weight: 500; }
+        #isbn-bloque { background: #e9ecef; padding: 8px 15px; border-radius: 20px; font-weight: bold; color: #495057; margin: 15px auto; font-size: 14px; display: block; max-width: 200px; border: 1px solid #ced4da; }
+    </style>
 </head>
 <body>
     <div class="container">
-        <!-- Pestaña del Escáner -->
-        <div id="sec-escaner" class="seccion activa">
-            <h1>Mi Biblioteca</h1>
-            <div class="version-tag">Versión de la App: v1.3.0</div>
-            
-            <div id="info-estado">Presiona el botón para iniciar el escáner</div>
-            <button id="btn-iniciar" onclick="comenzarEscaneoEnVivo()">Iniciar Escáner en Vivo</button>
-            
-            <div id="video-container">
-                <video id="webcam" autoplay playsinline></video>
-                <div class="laser"></div>
-            </div>
-
-            <div id="isbn-bloque">ISBN: <span id="num-isbn">Ninguno</span></div>
-
-            <div id="resultado" class="card">
-                <h2 id="libro-titulo"></h2>
-                <p id="libro-autor"></p>
-                <img id="libro-portada" src="" alt="Portada">
-                <div style="margin-top: 20px;">
-                    <button id="btn-guardar" onclick="guardarLibro()">Guardar en Biblioteca</button>
-                </div>
-            </div>
+        <h1>Mi Biblioteca</h1>
+        <div class="version-tag">Versión de la App: v1.4.0</div>
+        
+        <div id="info-estado">Presiona el botón para iniciar el escáner</div>
+        <button id="btn-iniciar" onclick="comenzarEscaneoEnVivo()">Iniciar Escáner en Vivo</button>
+        
+        <div id="video-container">
+            <video id="webcam" autoplay playsinline></video>
+            <div class="laser"></div>
         </div>
 
-        <!-- Pestaña de la Estantería -->
-        <div id="sec-estanteria" class="seccion">
-            <h1>Mis Libros Guardados</h1>
-            <div class="version-tag">Listado de tu colección local</div>
-            <div id="lista-vacia">Aún no has guardado ningún libro. ¡Ve a la pestaña Escáner!</div>
-            <div id="contenedor-estanteria" class="estanteria"></div>
+        <div id="isbn-bloque">ISBN: <span id="num-isbn">Ninguno</span></div>
+
+        <div id="resultado" class="card">
+            <h2 id="libro-titulo" style="margin: 0 0 10px 0; font-size: 20px;"></h2>
+            <p id="libro-autor" style="color: #555; margin: 0; font-size: 16px;"></p>
+            <img id="libro-portada" src="" alt="Portada">
+            <div style="margin-top: 20px;">
+                <button onclick="guardarLibro()" style="background: #28a745;">Guardar en Biblioteca</button>
+            </div>
         </div>
     </div>
 
-    <!-- Menú de navegación inferior -->
-    <nav class="nav-bar">
-        <button id="btn-nav-esc" class="nav-btn activo" onclick="cambiarPestaña('escaner')">📷 Escáner</button>
-        <button id="btn-nav-est" class="nav-btn" onclick="cambiarPestaña('estanteria')">📚 Mi Estantería</button>
-    </nav>
+    <script>
+        let streamActual = null;
+        let animationFrameId = null;
+        let detectorDeCodigos = null;
+        let libroActual = {};
+        let escaneando = false;
+
+        function actualizarEstado(txt) {
+            document.getElementById('info-estado').innerText = txt;
+        }
+
+        async function comenzarEscaneoEnVivo() {
+            if (!('BarcodeDetector' in window)) {
+                actualizarEstado("Tu navegador no soporta escaneo nativo. Usa Chrome actualizado.");
+                return;
+            }
+
+            document.getElementById('btn-iniciar').style.display = 'none';
+            document.getElementById('resultado').style.display = 'none';
+            document.getElementById('num-isbn').innerText = "Buscando...";
+            actualizarEstado("Abriendo cámara trasera...");
+
+            detectorDeCodigos = new BarcodeDetector({ formats: ['ean_13', 'ean_8'] });
+
+            try {
+                const constraints = {
+                    video: {
+                        facingMode: "environment",
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    }
+                };
+                
+                streamActual = await navigator.mediaDevices.getUserMedia(constraints);
+                const video = document.getElementById('webcam');
+                video.srcObject = streamActual;
+                
+                document.getElementById('video-container').style.display = 'block';
+                actualizarEstado("¡Escáner activo! Enfoca el código de barras...");
+                escaneando = true;
+
+                video.onloadedmetadata = () => {
+                    procesarFrameEnVivo();
+                };
+
+            } catch (err) {
+                console.error(err);
+                actualizarEstado("La cámara trasera se cerró. Revisa permisos.");
+                document.getElementById('btn-iniciar').style.display = 'block';
+            }
+        }
+
+        function procesarFrameEnVivo() {
+            if (!escaneando) return;
+
+            const video = document.getElementById('webcam');
+            
+            detectorDeCodigos.detect(video)
+                .then(barcodes => {
+                    if (barcodes.length > 0 && escaneando) {
+                        const isbnOriginal = barcodes[0].rawValue;
+                        escaneando = false;
+                        detenerCamara();
+                        
+                        const isbnLimpio = isbnOriginal.trim().replace(/[^0-9X]/gi, "");
+                        document.getElementById('num-isbn').innerText = isbnLimpio;
+                        
+                        actualizarEstado("¡Código leído! Buscando en internet...");
+                        buscarLibroPorISBN(isbnLimpio);
+                    } else {
+                        animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
+                });
+        }
+
+        function detenerCamara() {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            if (streamActual) {
+                streamActual.getTracks().forEach(track => track.stop());
+            }
+            document.getElementById('video-container').style.display = 'none';
+            document.getElementById('btn-iniciar').style.display = 'block';
+        }
+
+        async function buscarLibroPorISBN(isbn) {
+            // Buscamos usando un puente que no da fallos de conexión en el móvil
+            const url = `https://allorigins.win{encodeURIComponent('https://openlibrary.org:' + isbn + '&jscmd=data&format=json')}`;
+            
+            try {
+                const response = await fetch(url);
+                const resData = await response.json();
+                const data = JSON.parse(resData.contents);
+                const claveLibro = `ISBN:${isbn}`;
+                
+                if (data && data[claveLibro]) {
+                    const info = data[claveLibro];
+                    
+                    let nombresAutores = 'Autor desconocido';
+                    if (info.authors && info.authors.length > 0) {
+                        nombresAutores = info.authors.map(a => a.name).join(', ');
+                    }
+
+                    let urlPortada = 'https://placeholder.com';
+                    if (info.cover && info.cover.medium) {
+                        urlPortada = info.cover.medium;
+                    }
+
+                    libroActual = { titulo: info.title, autores: nombresAutores, portada: urlPortada };
+                    
+                    document.getElementById('libro-titulo').innerText = libroActual.titulo;
+                    document.getElementById('libro-autor').innerText = "Por: " + libroActual.autores;
+                    document.getElementById('libro-portada').src = libroActual.portada;
+                    document.getElementById('resultado').style.display = 'block';
+                    actualizarEstado("¡Libro cargado con éxito!");
+                } else {
+                    actualizarEstado("Código leído (" + isbn + "), pero no está en esta base de datos.");
+                }
+            } catch (error) {
+                actualizarEstado("Error al procesar los datos.");
+                console.error(error);
+            }
+        }
+
+        function guardarLibro() {
+            let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
+            biblioteca.push(libroActual);
+            localStorage.setItem('misLibros', JSON.stringify(biblioteca));
+            actualizarEstado("¡Libro guardado!");
+            document.getElementById('resultado').style.display = 'none';
+        }
+    </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Biblioteca v1.4.7</title>
+    <title>Mi Biblioteca v1.4.8</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background: #f8f9fa; text-align: center; margin: 0; }
         .container { max-width: 500px; margin: auto; padding: 10px; }
@@ -15,17 +15,19 @@
         .laser { position: absolute; top: 50%; left: 5%; width: 90%; height: 2px; background-color: red; box-shadow: 0 0 8px red; animation: laserAnim 2s infinite alternate; }
         @keyframes laserAnim { from { top: 35%; } to { top: 65%; } }
 
+        .card { background: white; padding: 20px; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: none; }
+        img { max-width: 130px; margin-top: 15px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        button { background: #007bff; color: white; border: none; padding: 14px 28px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; max-width: 280px; margin: 10px auto; display: block; }
+        button:active { background: #0056b3; }
+        
         #isbn-bloque { background: #e9ecef; padding: 8px 15px; border-radius: 20px; font-weight: bold; color: #495057; margin: 15px auto 5px auto; font-size: 14px; display: block; max-width: 200px; border: 1px solid #ced4da; }
         #info-estado { color: #555; font-size: 14px; margin: 5px 0 15px 0; font-weight: 500; font-style: italic; }
-        
-        /* Caja grande especial para ver el texto crudo de internet */
-        #consola-debug { background: #212529; color: #00ff00; font-family: monospace; text-align: left; padding: 15px; border-radius: 8px; font-size: 12px; overflow-x: auto; max-height: 300px; margin-top: 20px; display: none; white-space: pre-wrap; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Mi Biblioteca (Debug)</h1>
-        <div class="version-tag">Versión de la App: v1.4.7</div>
+        <h1>Mi Biblioteca</h1>
+        <div class="version-tag">Versión de la App: v1.4.8</div>
         
         <button id="btn-iniciar" onclick="comenzarEscaneoEnVivo()">Iniciar Escáner en Vivo</button>
         
@@ -37,14 +39,22 @@
         <div id="isbn-bloque">ISBN: <span id="num-isbn">Ninguno</span></div>
         <div id="info-estado">Estado: En espera...</div>
 
-        <!-- El visor de datos crudos -->
-        <div id="consola-debug"></div>
+        <!-- Recuperamos la tarjeta blanca de visualización -->
+        <div id="resultado" class="card">
+            <h2 id="libro-titulo" style="margin: 0 0 10px 0; font-size: 20px;"></h2>
+            <p id="libro-autor" style="color: #555; margin: 0; font-size: 16px;"></p>
+            <img id="libro-portada" src="" alt="Portada">
+            <div style="margin-top: 20px;">
+                <button onclick="guardarLibro()" style="background: #28a745;">Guardar en Biblioteca</button>
+            </div>
+        </div>
     </div>
 
     <script>
         let streamActual = null;
         let animationFrameId = null;
         let detectorDeCodigos = null;
+        let libroActual = {};
         let escaneando = false;
         let yaProcesado = false;
 
@@ -59,7 +69,7 @@
             }
 
             document.getElementById('btn-iniciar').style.display = 'none';
-            document.getElementById('consola-debug').style.display = 'none';
+            document.getElementById('resultado').style.display = 'none';
             document.getElementById('num-isbn').innerText = "Esperando lectura...";
             actualizarEstado("Conectando con la cámara trasera...");
             yaProcesado = false;
@@ -67,22 +77,36 @@
             detectorDeCodigos = new BarcodeDetector({ formats: ['ean_13', 'ean_8'] });
 
             try {
-                const constraints = { video: { facingMode: "environment" } };
+                const constraints = {
+                    video: {
+                        facingMode: "environment",
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    }
+                };
+                
                 streamActual = await navigator.mediaDevices.getUserMedia(constraints);
                 const video = document.getElementById('webcam');
                 video.srcObject = streamActual;
+                
                 document.getElementById('video-container').style.display = 'block';
                 actualizarEstado("Escáner activo. Enfoca el código de barras...");
                 escaneando = true;
-                video.onloadedmetadata = () => { procesarFrameEnVivo(); };
+
+                video.onloadedmetadata = () => {
+                    procesarFrameEnVivo();
+                };
+
             } catch (err) {
-                actualizarEstado("Error al abrir cámara.");
+                console.error(err);
+                actualizarEstado("Error al abrir cámara. Verifica permisos.");
                 document.getElementById('btn-iniciar').style.display = 'block';
             }
         }
 
         function procesarFrameEnVivo() {
             if (!escaneando) return;
+
             const video = document.getElementById('webcam');
             
             detectorDeCodigos.detect(video)
@@ -90,50 +114,86 @@
                     if (barcodes.length > 0 && escaneando && !yaProcesado) {
                         yaProcesado = true;
                         escaneando = false;
-                        const isbnOriginal = barcodes[0].rawValue;
+                        const isbnOriginal = barcodes.rawValue;
                         detenerCamara();
                         
                         const isbnLimpio = isbnOriginal.trim().replace(/[^0-9X]/gi, "");
                         document.getElementById('num-isbn').innerText = isbnLimpio;
                         
-                        actualizarEstado("Capturando respuesta cruda del servidor...");
-                        verRespuestaServidorCruda(isbnLimpio);
+                        actualizarEstado("Descargando ficha de libro por túnel seguro...");
+                        buscarLibroPorISBN(isbnLimpio);
                     } else {
-                        if (escaneando) animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
+                        if (escaneando) {
+                            animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
+                        }
                     }
                 })
                 .catch(err => {
-                    if (escaneando) animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
+                    console.error(err);
+                    if (escaneando) {
+                        animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
+                    }
                 });
         }
 
         function detenerCamara() {
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
-            if (streamActual) streamActual.getTracks().forEach(track => track.stop());
+            if (streamActual) {
+                streamActual.getTracks().forEach(track => track.stop());
+            }
             document.getElementById('video-container').style.display = 'none';
             document.getElementById('btn-iniciar').style.display = 'block';
         }
 
-        // FUNCIÓN DE DIAGNÓSTICO: Muestra el texto tal cual llega de internet
-        async function verRespuestaServidorCruda(isbn) {
-            const urlConProxy = `https://corsproxy.io` + encodeURIComponent(`https://googleapis.com{isbn}`);
-            const consola = document.getElementById('consola-debug');
+        async function buscarLibroPorISBN(isbn) {
+            // SINTAXIS REPARADA: Construcción limpia de la URL sin sumas erróneas de texto externo
+            const destinoAPI = "https://googleapis.com:" + isbn;
+            const urlConProxy = "https://corsproxy.io" + encodeURIComponent(destinoAPI);
             
             try {
                 const response = await fetch(urlConProxy);
+                const data = await response.json();
                 
-                // Convertimos la respuesta directamente a texto plano, sin procesar como JSON
-                const textoCrudo = await response.text();
-                
-                // Mostramos el bloque de texto en una caja negra con letras verdes
-                consola.innerText = textoCrudo;
-                consola.style.display = 'block';
-                actualizarEstado("Respuesta recibida. Analizando texto en pantalla...");
+                if (data && data.totalItems > 0 && data.items && data.items[0]) {
+                    const info = data.items[0].volumeInfo;
+                    
+                    let nombresAutores = 'Autor desconocido';
+                    if (info.authors && info.authors.length > 0) {
+                        nombresAutores = info.authors.join(', ');
+                    }
+
+                    let urlPortada = 'https://placeholder.com';
+                    if (info.imageLinks && info.imageLinks.thumbnail) {
+                        urlPortada = info.imageLinks.thumbnail.replace('http://', 'https://');
+                    }
+
+                    libroActual = { 
+                        titulo: info.title, 
+                        autores: nombresAutores, 
+                        portada: urlPortada 
+                    };
+                    
+                    document.getElementById('libro-titulo').innerText = libroActual.titulo;
+                    document.getElementById('libro-autor').innerText = "Por: " + libroActual.autores;
+                    document.getElementById('libro-portada').src = libroActual.portada;
+                    document.getElementById('resultado').style.display = 'block';
+                    
+                    actualizarEstado("¡Libro cargado con éxito!");
+                } else {
+                    actualizarEstado("No encontrado en el registro global de Google.");
+                }
             } catch (error) {
-                consola.innerText = "Error de red directo: " + error.message;
-                consola.style.display = 'block';
-                actualizarEstado("La petición ni siquiera llegó al servidor.");
+                actualizarEstado("Error al procesar los datos recibidos.");
+                console.error(error);
             }
+        }
+
+        function guardarLibro() {
+            let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
+            biblioteca.push(libroActual);
+            localStorage.setItem('misLibros', JSON.stringify(biblioteca));
+            actualizarEstado("¡Libro guardado en tu colección!");
+            document.getElementById('resultado').style.display = 'none';
         }
     </script>
 </body>

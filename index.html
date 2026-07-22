@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Biblioteca v1.4.8</title>
+    <title>Mi Biblioteca v1.4.9</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background: #f8f9fa; text-align: center; margin: 0; }
         .container { max-width: 500px; margin: auto; padding: 10px; }
@@ -27,7 +27,7 @@
 <body>
     <div class="container">
         <h1>Mi Biblioteca</h1>
-        <div class="version-tag">Versión de la App: v1.4.8</div>
+        <div class="version-tag">Versión de la App: v1.4.9</div>
         
         <button id="btn-iniciar" onclick="comenzarEscaneoEnVivo()">Iniciar Escáner en Vivo</button>
         
@@ -39,7 +39,6 @@
         <div id="isbn-bloque">ISBN: <span id="num-isbn">Ninguno</span></div>
         <div id="info-estado">Estado: En espera...</div>
 
-        <!-- Recuperamos la tarjeta blanca de visualización -->
         <div id="resultado" class="card">
             <h2 id="libro-titulo" style="margin: 0 0 10px 0; font-size: 20px;"></h2>
             <p id="libro-autor" style="color: #555; margin: 0; font-size: 16px;"></p>
@@ -56,7 +55,6 @@
         let detectorDeCodigos = null;
         let libroActual = {};
         let escaneando = false;
-        let yaProcesado = false;
 
         function actualizarEstado(txt) {
             document.getElementById('info-estado').innerText = "Acción: " + txt;
@@ -72,7 +70,6 @@
             document.getElementById('resultado').style.display = 'none';
             document.getElementById('num-isbn').innerText = "Esperando lectura...";
             actualizarEstado("Conectando con la cámara trasera...");
-            yaProcesado = false;
 
             detectorDeCodigos = new BarcodeDetector({ formats: ['ean_13', 'ean_8'] });
 
@@ -105,23 +102,30 @@
         }
 
         function procesarFrameEnVivo() {
-            if (!escaneando) return;
+            if (!escaneando || !detectorDeCodigos) return;
 
             const video = document.getElementById('webcam');
             
             detectorDeCodigos.detect(video)
                 .then(barcodes => {
-                    if (barcodes.length > 0 && escaneando && !yaProcesado) {
-                        yaProcesado = true;
+                    if (barcodes.length > 0 && escaneando) {
+                        // DETECCIÓN EXITOSA: Frenamos en seco antes de cualquier otra cosa
                         escaneando = false;
-                        const isbnOriginal = barcodes.rawValue;
+                        const isbnOriginal = barcodes[0].rawValue;
+                        
+                        // DESTRUCCIÓN DE INSTANCIAS: Forzamos la muerte del hardware de la cámara
+                        detectorDeCodigos = null; 
                         detenerCamara();
                         
                         const isbnLimpio = isbnOriginal.trim().replace(/[^0-9X]/gi, "");
                         document.getElementById('num-isbn').innerText = isbnLimpio;
                         
                         actualizarEstado("Descargando ficha de libro por túnel seguro...");
-                        buscarLibroPorISBN(isbnLimpio);
+                        
+                        // Retrasamos la petición 100ms para asegurar que el Xiaomi liberó la cámara
+                        setTimeout(() => {
+                            buscarLibroPorISBN(isbnLimpio);
+                        }, 100);
                     } else {
                         if (escaneando) {
                             animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
@@ -137,16 +141,19 @@
         }
 
         function detenerCamara() {
-            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
             if (streamActual) {
                 streamActual.getTracks().forEach(track => track.stop());
+                streamActual = null;
             }
             document.getElementById('video-container').style.display = 'none';
             document.getElementById('btn-iniciar').style.display = 'block';
         }
 
         async function buscarLibroPorISBN(isbn) {
-            // SINTAXIS REPARADA: Construcción limpia de la URL sin sumas erróneas de texto externo
             const destinoAPI = "https://googleapis.com:" + isbn;
             const urlConProxy = "https://corsproxy.io" + encodeURIComponent(destinoAPI);
             
@@ -154,8 +161,8 @@
                 const response = await fetch(urlConProxy);
                 const data = await response.json();
                 
-                if (data && data.totalItems > 0 && data.items && data.items[0]) {
-                    const info = data.items[0].volumeInfo;
+                if (data && data.totalItems > 0 && data.items && data.items.length > 0) {
+                    const info = data.items[0].volumeInfo; // Corregido: añadida posición exacta del array de items
                     
                     let nombresAutores = 'Autor desconocido';
                     if (info.authors && info.authors.length > 0) {

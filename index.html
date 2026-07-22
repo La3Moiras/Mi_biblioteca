@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Biblioteca v1.5.0</title>
+    <title>Mi Biblioteca v1.5.1</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background: #f8f9fa; text-align: center; margin: 0; }
         .container { max-width: 500px; margin: auto; padding: 10px; }
@@ -25,7 +25,7 @@
 <body>
     <div class="container">
         <h1>Mi Biblioteca</h1>
-        <div class="version-tag">Versión de la App: v1.5.0</div>
+        <div class="version-tag">Versión de la App: v1.5.1</div>
         
         <button id="btn-iniciar" onclick="comenzarEscaneoEnVivo()">Iniciar Escáner en Vivo</button>
         
@@ -45,6 +45,7 @@
         let streamActual = null;
         let animationFrameId = null;
         let detectorDeCodigos = null;
+        let libroActual = {};
         let escaneando = false;
 
         function actualizarEstado(txt) {
@@ -100,6 +101,7 @@
             detectorDeCodigos.detect(video)
                 .then(barcodes => {
                     if (barcodes.length > 0 && escaneando) {
+                        // ORDEN DE APAGADO EXACTO DE LA VERSIÓN 1.4.9 (FUNCIONABA OK)
                         escaneando = false;
                         const isbnOriginal = barcodes.rawValue;
                         
@@ -110,7 +112,11 @@
                         document.getElementById('num-isbn').innerText = isbnLimpio;
                         
                         actualizarEstado("Imprimiendo datos crudos recibidos...");
-                        imprimirTextoCrudoServidor(isbnLimpio);
+                        
+                        // Retrasamos un suspiro el diagnóstico para que el hardware respire
+                        setTimeout(() => {
+                            imprimirTextoCrudoServidor(isbnLimpio);
+                        }, 150);
                     } else {
                         if (escaneando) {
                             animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
@@ -138,16 +144,13 @@
             document.getElementById('btn-iniciar').style.display = 'block';
         }
 
-        // FUNCIÓN DIAGNÓSTICA EXCLUSIVA: Descarga y muestra en pantalla la respuesta sin filtrar
         async function imprimirTextoCrudoServidor(isbn) {
-            const apiDestino = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn;
+            const apiDestino = "https://googleapis.com:" + isbn;
             const urlConProxy = "https://corsproxy.io" + encodeURIComponent(apiDestino);
             const panelDebug = document.getElementById('caja-debug');
             
             try {
                 const response = await fetch(urlConProxy);
-                
-                // Forzamos a la app a leer la respuesta como texto plano para evitar bloqueos por fallos de formato
                 const datosEnTexto = await response.text();
                 
                 panelDebug.innerText = datosEnTexto;

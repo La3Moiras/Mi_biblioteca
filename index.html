@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Biblioteca v1.4.4</title>
+    <title>Mi Biblioteca v1.4.5</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background: #f8f9fa; text-align: center; margin: 0; }
         .container { max-width: 500px; margin: auto; padding: 10px; }
@@ -27,7 +27,7 @@
 <body>
     <div class="container">
         <h1>Mi Biblioteca</h1>
-        <div class="version-tag">Versión de la App: v1.4.4</div>
+        <div class="version-tag">Versión de la App: v1.4.5</div>
         
         <button id="btn-iniciar" onclick="comenzarEscaneoEnVivo()">Iniciar Escáner en Vivo</button>
         
@@ -55,6 +55,7 @@
         let detectorDeCodigos = null;
         let libroActual = {};
         let escaneando = false;
+        let yaProcesado = false; // FRENO DE SEGURIDAD NUEVO
 
         function actualizarEstado(txt) {
             document.getElementById('info-estado').innerText = "Acción: " + txt;
@@ -70,6 +71,7 @@
             document.getElementById('resultado').style.display = 'none';
             document.getElementById('num-isbn').innerText = "Esperando lectura...";
             actualizarEstado("Conectando con la cámara trasera...");
+            yaProcesado = false; // Reiniciamos el freno para un nuevo libro
 
             detectorDeCodigos = new BarcodeDetector({ formats: ['ean_13', 'ean_8'] });
 
@@ -108,46 +110,54 @@
             
             detectorDeCodigos.detect(video)
                 .then(barcodes => {
-                    if (barcodes.length > 0 && escaneando) {
-                        const isbnOriginal = barcodes.rawValue;
+                    if (barcodes.length > 0 && escaneando && !yaProcesado) {
+                        yaProcesado = true; // ACTIVAMOS EL FRENO INMEDIATAMENTE
                         escaneando = false;
+                        
+                        const isbnOriginal = barcodes[0].rawValue; // Aseguramos tomar estrictamente el primer elemento
                         detenerCamara();
                         
-                        // CORREGIDO: Eliminada la palabra errónea que rompía el sensor
                         const isbnLimpio = isbnOriginal.trim().replace(/[^0-9X]/gi, "");
                         document.getElementById('num-isbn').innerText = isbnLimpio;
                         
                         actualizarEstado("Descargando ficha de libro por túnel seguro...");
                         buscarLibroPorISBN(isbnLimpio);
                     } else {
-                        animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
+                        if (escaneando) {
+                            animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
+                        }
                     }
                 })
                 .catch(err => {
                     console.error(err);
-                    animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
+                    if (escaneando) {
+                        animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
+                    }
                 });
         }
 
         function detenerCamara() {
-            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
             if (streamActual) {
                 streamActual.getTracks().forEach(track => track.stop());
+                streamActual = null;
             }
             document.getElementById('video-container').style.display = 'none';
             document.getElementById('btn-iniciar').style.display = 'block';
         }
 
         async function buscarLibroPorISBN(isbn) {
-            // Conector directo a través de un proxy alternativo abierto para Google Books
-            const urlConProxy = `https://corsproxy.io/?url=` + encodeURIComponent(`https://googleapis.com{isbn}`);
+            const urlConProxy = `https://corsproxy.io` + encodeURIComponent(`https://googleapis.com{isbn}`);
             
             try {
                 const response = await fetch(urlConProxy);
                 const data = await response.json();
                 
                 if (data && data.totalItems > 0 && data.items && data.items[0]) {
-                    const info = data.items[0].volumeInfo;
+                    const info = data.items[0].volumeInfo; // Corregida la extracción de la posición exacta
                     
                     let nombresAutores = 'Autor desconocido';
                     if (info.authors && info.authors.length > 0) {

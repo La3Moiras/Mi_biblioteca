@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Biblioteca v1.4.0</title>
+    <title>Mi Biblioteca v1.4.1</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background: #f8f9fa; text-align: center; margin: 0; }
         .container { max-width: 500px; margin: auto; padding: 10px; }
@@ -27,7 +27,7 @@
 <body>
     <div class="container">
         <h1>Mi Biblioteca</h1>
-        <div class="version-tag">Versión de la App: v1.4.0</div>
+        <div class="version-tag">Versión de la App: v1.4.1</div>
         
         <div id="info-estado">Presiona el botón para iniciar el escáner</div>
         <button id="btn-iniciar" onclick="comenzarEscaneoEnVivo()">Iniciar Escáner en Vivo</button>
@@ -109,7 +109,7 @@
             detectorDeCodigos.detect(video)
                 .then(barcodes => {
                     if (barcodes.length > 0 && escaneando) {
-                        const isbnOriginal = barcodes[0].rawValue;
+                        const isbnOriginal = barcodes.rawValue;
                         escaneando = false;
                         detenerCamara();
                         
@@ -137,42 +137,51 @@
             document.getElementById('btn-iniciar').style.display = 'block';
         }
 
+        // NUEVO MOTOR DE INFORMACIÓN CON CONEXIÓN COMPATIBLE CON GOOGLE
         async function buscarLibroPorISBN(isbn) {
-            // Buscamos usando un puente que no da fallos de conexión en el móvil
-            const url = `https://allorigins.win{encodeURIComponent('https://openlibrary.org:' + isbn + '&jscmd=data&format=json')}`;
+            // Consultamos directamente el catálogo global de Google Books en formato abierto JSON sin proxies inestables
+            const url = `https://googleapis.com{isbn}`;
             
             try {
                 const response = await fetch(url);
-                const resData = await response.json();
-                const data = JSON.parse(resData.contents);
-                const claveLibro = `ISBN:${isbn}`;
+                const data = await response.json();
                 
-                if (data && data[claveLibro]) {
-                    const info = data[claveLibro];
+                // Si Google encuentra el libro en su catálogo mundial
+                if (data && data.totalItems > 0 && data.items && data.items[0]) {
+                    const info = data.items[0].volumeInfo;
                     
+                    // Extraer los autores o poner desconocido si no tiene
                     let nombresAutores = 'Autor desconocido';
                     if (info.authors && info.authors.length > 0) {
-                        nombresAutores = info.authors.map(a => a.name).join(', ');
+                        nombresAutores = info.authors.join(', ');
                     }
 
+                    // Extraer la portada oficial y forzar la imagen segura en HTTPS
                     let urlPortada = 'https://placeholder.com';
-                    if (info.cover && info.cover.medium) {
-                        urlPortada = info.cover.medium;
+                    if (info.imageLinks && info.imageLinks.thumbnail) {
+                        urlPortada = info.imageLinks.thumbnail.replace('http://', 'https://');
                     }
 
-                    libroActual = { titulo: info.title, autores: nombresAutores, portada: urlPortada };
+                    // Guardar los datos del libro cargado
+                    libroActual = { 
+                        titulo: info.title, 
+                        autores: nombresAutores, 
+                        portada: urlPortada 
+                    };
                     
+                    // Dibujar los datos en la tarjeta blanca de la pantalla
                     document.getElementById('libro-titulo').innerText = libroActual.titulo;
                     document.getElementById('libro-autor').innerText = "Por: " + libroActual.autores;
                     document.getElementById('libro-portada').src = libroActual.portada;
                     document.getElementById('resultado').style.display = 'block';
-                    actualizarEstado("¡Libro cargado con éxito!");
+                    
+                    actualizarEstado("¡Libro encontrado con éxito!");
                 } else {
-                    actualizarEstado("Código leído (" + isbn + "), pero no está en esta base de datos.");
+                    actualizarEstado("ISBN registrado (" + isbn + "), pero no tiene ficha en Google Books.");
                 }
             } catch (error) {
-                actualizarEstado("Error al procesar los datos.");
-                console.error(error);
+                actualizarEstado("Error al decodificar la información del servidor.");
+                console.error("Detalle del fallo de red:", error);
             }
         }
 

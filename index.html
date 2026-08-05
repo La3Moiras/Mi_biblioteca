@@ -213,7 +213,7 @@ document.getElementById('btn-iniciar').style.display = 'block';
 }
 
 async function buscarLibroPorISBN(isbn) {
-const urlDirecta = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn + "&key=";
+const urlDirecta = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn +"&key=AIzaSyAI3ZbntVgR9XRAB4dQk2Qa_t8KAbHGbck";
 try {
 const response = await fetch(urlDirecta);
 const data = await response.json()

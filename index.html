@@ -213,7 +213,7 @@ document.getElementById('btn-iniciar').style.display = 'block';
 }
 
 async function buscarLibroPorISBN(isbn) {
-const urlDirecta = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn + "&key=AIzaSyAI3ZbntVgR9XRAB4dQk2Qa_t8KAbHGbck";
+const urlDirecta = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn + "&key=";
 try {
 const response = await fetch(urlDirecta);
 const data = await response.json()
@@ -294,87 +294,93 @@ btnVolver.style.display = "none";
 return;
 }
 txtVacio.style.display = "none";
-
 // NIVEL 1: MOSTRAR MUEBLES / ESTANTERÍAS
-if (nivelActual === "estanterias") {
-txtTitulo.innerText = "Mis Estanterías";
-btnVolver.style.display = "none";
+            if (nivelActual === "estanterias") {
+                txtTitulo.innerText = "Mis Estanterías";
+                btnVolver.style.display = "none";
+                
+                // Extraer nombres únicos de estanterías
+                let estanteriasUnicas = [...new Set(biblioteca.map(l => l.estanteria))];
+                
+                estanteriasUnicas.forEach(est => {
+                    let totalEnEst = biblioteca.filter(l => l.estanteria === est).length;
+                    let div = document.createElement('div');
+                    div.className = 'item-carpeta';
+                    div.innerHTML = `📁 ${est} <span>(${totalEnEst} libros) ➔</span>`;
+                    div.onclick = () => {
+                        estanteriaSeleccionada = est;
+                        nivelActual = "baldas";
+                        renderizarJerarquia();
+                    };
+                    divCarpetas.appendChild(div);
+                });
+            }
+            
+            // NIVEL 2: MOSTRAR BALDAS DE UNA ESTANTERÍA
+            else if (nivelActual === "baldas") {
+                txtTitulo.innerText = "Estantería: " + estanteriaSeleccionada;
+                btnVolver.style.display = "block";
+                
+                let librosDeEstanteria = biblioteca.filter(l => l.estanteria === estanteriaSeleccionada);
+                let baldasUnicas = [...new Set(librosDeEstanteria.map(l => l.balda))];
+                
+                baldasUnicas.forEach(bal => {
+                    let totalEnBal = librosDeEstanteria.filter(l => l.balda === bal).length;
+                    let div = document.createElement('div');
+                    div.className = 'item-carpeta';
+                    div.style.borderColor = "#28a745";
+                    div.innerHTML = `➖ ${bal} <span>(${totalEnBal} uds) ➔</span>`;
+                    div.onclick = () => {
+                        baldaSeleccionada = bal;
+                        nivelActual = "libros";
+                        renderizarJerarquia();
+                    };
+                    divCarpetas.appendChild(div);
+                });
+            }
+            
+            // NIVEL 3: CUADRÍCULA DE LIBROS CON PORTADAS Y BORRADO
+            else if (nivelActual === "libros") {
+                txtTitulo.innerText = estanteriaSeleccionada + " ➔ " + baldaSeleccionada;
+                btnVolver.style.display = "block";
+                
+                let librosFiltrados = biblioteca.filter(l => l.estanteria === estanteriaSeleccionada && l.balda === baldaSeleccionada);
+                
+                librosFiltrados.forEach(libro => {
+                    let div = document.createElement('div');
+                    div.className = 'item-libro';
+                    div.innerHTML = `
+                        <img src="${libro.portada}" alt="Portada">
+                        <p class="item-titulo">${libro.titulo}</p>
+                        <p class="item-autor">${libro.autores}</p>
+                        <button class="btn-borrar" onclick="eliminarLibroDeEstanteria('${libro.isbn}', '${libro.titulo}')">❌</button>
+                    `;
+                    contenedorLibros.appendChild(div);
+                });
+            }
+        } // Aquí se cierra correctamente la función renderizarJerarquia
 
-// Extraer nombres únicos de estanterías
-let estanteriasUnicas = [...new Set(biblioteca.map(l => l.estanteria))];
+        function volverAtrasJerarquia() {
+            if (nivelActual === "libros") {
+                nivelActual = "baldas";
+            } else if (nivelActual === "baldas") {
+                nivelActual = "estanterias";
+            }
+            renderizarJerarquia();
+        }
 
-estanteriasUnicas.forEach(est => {
-let totalEnEst = biblioteca.filter(l => l.estanteria === est).length;
-let div = document.createElement('div');
-div.className = 'item-carpeta';
-div.innerHTML = 📁 ${est} <span>(${totalEnEst} libros) ➔</span>;
-div.onclick = () => {
-estanteriaSeleccionada = est;
-nivelActual = "baldas";
-renderizarJerarquia();
-};
-divCarpetas.appendChild(div);
-});
-}
-
-// NIVEL 2: MOSTRAR BALDAS DE UNA ESTANTERÍA
-else if (nivelActual === "baldas") {
-txtTitulo.innerText = "Estantería: " + estanteriaSeleccionada;
-btnVolver.style.display = "block";
-
-let librosDeEstanteria = biblioteca.filter(l => l.estanteria === estanteriaSeleccionada);
-let baldasUnicas = [...new Set(librosDeEstanteria.map(l => l.balda))];
-
-baldasUnicas.forEach(bal => {
-let totalEnBal = librosDeEstanteria.filter(l => l.balda === bal).length;
-let div = document.createElement('div');div.className = 'item-carpeta';
-div.style.borderColor = "#28a745";
-div.innerHTML = ➖ ${bal} <span>(${totalEnBal} uds) ➔</span>;
-div.onclick = () => {
-baldaSeleccionada = bal;
-nivelActual = "libros";
-renderizarJerarquia();
-};
-divCarpetas.appendChild(div);
-});
-}
-
-// NIVEL 3: CUADRÍCULA DE LIBROS CON PORTADAS Y BORRADO
-else if (nivelActual === "libros") {
-txtTitulo.innerText = estanteriaSeleccionada + " ➔ " + baldaSeleccionada;
-btnVolver.style.display = "block";
-
-let librosFiltrados = biblioteca.filter(l => l.estanteria === estanteriaSeleccionada && l.balda === baldaSeleccionada);
-
-librosFiltrados.forEach(libro => {
-let div = document.createElement('div');
-div.className = 'item-libro';
-div.innerHTML = <img src="${libro.portada}" alt="Portada"> <p class="item-titulo">${libro.titulo}</p> <p class="item-autor">${libro.autores}</p> <button class="btn-borrar" onclick="eliminarLibroDeEstanteria('${libro.isbn}', '${libro.titulo}')">❌</button>;
-contenedorLibros.appendChild(div);
-});
-}
-}
-
-function volverAtrasJerarquia() {
-if (nivelActual === "libros") {
-nivelActual = "baldas";
-} else if (nivelActual === "baldas") {
-nivelActual = "estanterias";
-}
-renderizarJerarquia();
-}
-function eliminarLibroDeEstanteria(isbn, titulo) {
-if (confirm("¿Estás seguro de que quieres eliminar '" + titulo + "' de tu estantería?")){
-let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
-
-// Filtrar para borrar solo el libro con ese ISBN exacto
-biblioteca = biblioteca.filter(libro => libro.isbn !== isbn);
-localStorage.setItem('misLibros', JSON.stringify(biblioteca));
-
-// Recargar la pantalla actual para refrescar los cambios
-renderizarJerarquia();
-}
-}
+        function eliminarLibroDeEstanteria(isbn, titulo) {
+            if (confirm("¿Estás seguro de que quieres eliminar '" + titulo + "' de tu estantería?")) {
+                let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
+                
+                // Filtrar para borrar solo el libro con ese ISBN exacto
+                biblioteca = biblioteca.filter(libro => libro.isbn !== isbn);
+                localStorage.setItem('misLibros', JSON.stringify(biblioteca));
+                
+                // Recargar la pantalla actual para refrescar los cambios
+                renderizarJerarquia();
+            }
+        }
     </script>
 </body>
 </html>

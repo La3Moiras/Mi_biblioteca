@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Biblioteca v2.1.0</title>
+    <title>Mi Biblioteca v3.0.0</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background: #f8f9fa; text-align: center; margin: 0; padding-bottom: 80px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background: #f8f9fa; text-align: center; margin: 0; padding-bottom: 90px; }
         .container { max-width: 500px; margin: auto; padding: 10px; }
         .version-tag { font-size: 11px; color: #aaa; margin-top: -10px; margin-bottom: 20px; }
         
@@ -15,40 +15,53 @@
         .laser { position: absolute; top: 50%; left: 5%; width: 90%; height: 2px; background-color: red; box-shadow: 0 0 8px red; animation: laserAnim 2s infinite alternate; }
         @keyframes laserAnim { from { top: 35%; } to { top: 65%; } }
 
-        .card { background: white; padding: 20px; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: none; }
-        img { max-width: 130px; margin-top: 15px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        .card { background: white; padding: 20px; border-radius: 12px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: none; text-align: left; }
+        .card h2 { margin-top: 0; font-size: 20px; text-align: center; }
+        .card label { font-weight: bold; font-size: 13px; color: #495057; display: block; margin-top: 10px; }
+        .card input { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
+        .card img { max-width: 110px; display: block; margin: 15px auto 0 auto; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        
         button { background: #007bff; color: white; border: none; padding: 14px 28px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; max-width: 280px; margin: 10px auto; display: block; }
         button:active { background: #0056b3; }
         
         #isbn-bloque { background: #e9ecef; padding: 8px 15px; border-radius: 20px; font-weight: bold; color: #495057; margin: 15px auto 5px auto; font-size: 14px; display: block; max-width: 200px; border: 1px solid #ced4da; }
         #info-estado { color: #555; font-size: 14px; margin: 5px 0 15px 0; font-weight: 500; font-style: italic; }
 
-        /* Estructura de Secciones */
         .seccion { display: none; }
         .seccion.activa { display: block; }
 
-        /* Diseño de la Estantería Visual */
+        /* Lista de Carpetas/Navegación */
+        .lista-carpetas { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .item-carpeta { background: white; padding: 16px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: left; font-weight: bold; font-size: 16px; color: #212529; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #007bff; }
+        
+        /* Estantería Visual de Portadas */
         .estanteria { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px; }
-        .item-libro { background: white; padding: 12px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: left; }
+        .item-libro { background: white; padding: 12px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: left; position: relative; }
         .item-libro img { max-width: 85px; display: block; margin: 0 auto 10px auto; border-radius: 2px; }
-        .item-titulo { font-size: 14px; font-weight: bold; margin: 0; color: #212529; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .item-titulo { font-size: 14px; font-weight: bold; margin: 0; color: #212529; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; padding-right: 20px; }
         .item-autor { font-size: 12px; color: #6c757d; margin: 5px 0 0 0; }
+        
+        /* Botón Borrar Libro */
+        .btn-borrar { position: absolute; bottom: 12px; right: 12px; background: none; border: none; color: #dc3545; font-size: 18px; cursor: pointer; padding: 0; width: auto; margin: 0; display: inline; }
 
-        /* Menú de navegación inferior estilo Handy Library */
+        /* Barra de navegación inferior */
         .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #dee2e6; display: flex; justify-content: space-around; padding: 12px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 1000; }
         .nav-btn { background: none; border: none; font-size: 14px; color: #6c757d; font-weight: bold; cursor: pointer; padding: 5px 10px; width: auto; margin: 0; }
         .nav-btn.activo { color: #007bff; }
+        
+        .btn-atras { background: #6c757d; padding: 8px 15px; font-size: 13px; display: inline-block; width: auto; margin-bottom: 15px; float: left; }
     </style>
 </head>
 <body>
     <div class="container">
         
-        <!-- PESTAÑA 1: ESCÁNER -->
+        <!-- PESTAÑA 1: ESCÁNER Y ADICIÓN -->
         <div id="sec-escaner" class="seccion activa">
             <h1>Mi Biblioteca</h1>
-            <div class="version-tag">Versión de la App: v2.1.0</div>
+            <div class="version-tag">Versión de la App: v3.0.0</div>
             
-            <button id="btn-iniciar" onclick="comenzarEscaneoEnVivo()">Iniciar Escáner en Vivo</button>
+            <button id="btn-iniciar" onclick="comenzarEscaneoEnVivo()">📷 Iniciar Escáner en Vivo</button>
+            <button id="btn-manual-toggle" onclick="abrirFormularioManual()" style="background:#28a745; margin-top:0;">📝 ¿No lee? Añadir a Mano</button>
             
             <div id="video-container">
                 <video id="webcam" autoplay playsinline></video>
@@ -58,38 +71,61 @@
             <div id="isbn-bloque">ISBN: <span id="num-isbn">Ninguno</span></div>
             <div id="info-estado">Estado: En espera...</div>
 
+            <!-- Formulario de Ficha (Sirve para Escaneado y Manual) -->
             <div id="resultado" class="card">
-                <h2 id="libro-titulo" style="margin: 0 0 10px 0; font-size: 20px;"></h2>
-                <p id="libro-autor" style="color: #555; margin: 0; font-size: 16px;"></p>
-                <img id="libro-portada" src="" alt="Portada">
+                <h2 id="formulario-titulo">Ficha del Libro</h2>
+                
+                <label>Título del libro:</label>
+                <input type="text" id="form-titulo">
+                
+                <label>Autor / Escritor:</label>
+                <input type="text" id="form-autor">
+                
+                <label>Estantería / Habitación:</label>
+                <input type="text" id="form-estanteria" placeholder="Ej: Salón, Estudio...">
+                
+                <label>Balda / Estante:</label>
+                <input type="text" id="form-balda" placeholder="Ej: Balda 1, Superior...">
+                
+                <img id="libro-portada" src="" alt="Portada" style="display:none;">
+                
                 <div style="margin-top: 20px;">
-                    <button onclick="guardarLibro()" style="background: #28a745;">Guardar en Biblioteca</button>
+                    <button onclick="guardarLibroDefinitivo()" style="background: #28a745; max-width: 100%;">💾 Guardar Libro en la App</button>
                 </div>
             </div>
         </div>
 
-        <!-- PESTAÑA 2: ESTANTERÍA -->
+        <!-- PESTAÑA 2: BIBLIOTECA JERÁRQUICA -->
         <div id="sec-estanteria" class="seccion">
-            <h1>Mis Libros Guardados</h1>
-            <div class="version-tag">Listado de tu colección local</div>
-            <div id="lista-vacia" style="color: #666; margin-top: 40px;">Aún no has guardado ningún libro. ¡Ve a la pestaña Escáner!</div>
+            <h1 id="titulo-navegacion">Navegar Biblioteca</h1>
+            <div class="version-tag">Organización física estructural</div>
+            
+            <button id="btn-volver-rutas" class="btn-atras" onclick="volverAtrasJerarquia()" style="display:none;">⬅ Volver</button>
+            <div style="clear:both;"></div>
+
+            <div id="lista-vacia" style="color: #666; margin-top: 40px;">Tu estantería está vacía. ¡Escanea un libro!</div>
+            <div id="bloque-jerarquia" class="lista-carpetas"></div>
             <div id="contenedor-estanteria" class="estanteria"></div>
         </div>
 
     </div>
 
-    <!-- Menú inferior de navegación -->
     <nav class="nav-bar">
         <button id="btn-nav-esc" class="nav-btn activo" onclick="cambiarPestaña('escaner')">📷 Escáner</button>
         <button id="btn-nav-est" class="nav-btn" onclick="cambiarPestaña('estanteria')">📚 Mi Estantería</button>
     </nav>
 
-<script>
+    <script>
         let streamActual = null;
         let animationFrameId = null;
         let detectorDeCodigos = null;
         let libroActual = {};
         let escaneando = false;
+        
+        // Variables para recordar la navegación de carpetas
+        let nivelActual = "estanterias"; // Puede ser: estanterias, baldas, libros
+        let estanteriaSeleccionada = "";
+        let baldaSeleccionada = "";
 
         function actualizarEstado(txt) {
             document.getElementById('info-estado').innerText = "Acción: " + txt;
@@ -106,8 +142,23 @@
             } else {
                 document.getElementById('sec-estanteria').classList.add('activa');
                 document.getElementById('btn-nav-est').classList.add('activo');
-                renderizarEstanteria();
+                nivelActual = "estanterias";
+                renderizarJerarquia();
             }
+        }
+
+        function abrirFormularioManual() {
+            detenerCamara();
+            document.getElementById('resultado').style.display = 'block';
+            document.getElementById('num-isbn').innerText = "Alineación manual";
+            document.getElementById('form-titulo').value = "";
+            document.getElementById('form-autor').value = "";
+            document.getElementById('form-estanteria').value = "";
+            document.getElementById('form-balda').value = "";
+            document.getElementById('libro-portada').style.display = 'none';
+            
+            libroActual = { isbn: "MANUAL-" + Date.now(), portada: "https://placeholder.com" };
+            actualizarEstado("Formulario de alta manual abierto.");
         }
 
         async function comenzarEscaneoEnVivo() {
@@ -119,139 +170,211 @@
             document.getElementById('btn-iniciar').style.display = 'none';
             document.getElementById('resultado').style.display = 'none';
             document.getElementById('num-isbn').innerText = "Esperando lectura...";
-            actualizarEstado("Conectando con la cámara trasera...");
+actualizarEstado("Conectando con la cámara trasera...");
 
-            detectorDeCodigos = new BarcodeDetector({ formats: ['ean_13', 'ean_8'] });
+detectorDeCodigos = new BarcodeDetector({ formats: ['ean_13', 'ean_8'] });
+try {
+const constraints = { video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480}}};
+streamActual = await navigator.mediaDevices.getUserMedia(constraints);
+document.getElementById('webcam').srcObject = streamActual;
+document.getElementById('video-container').style.display = 'block';
+actualizarEstado("Escáner activo. Enfoca el código de barras...");
+escaneando = true;
+document.getElementById('webcam').onloadedmetadata = () => { procesarFrameEnVivo();
+ };
+} catch (err) {
+actualizarEstado("Error al abrir cámara.");
+document.getElementById('btn-iniciar').style.display = 'block';
+}
+}
+function procesarFrameEnVivo() {
+if (!escaneando || !detectorDeCodigos) return;
+detectorDeCodigos.detect(document.getElementById('webcam')).then(barcodes => {
+if (barcodes && barcodes.length > 0 && escaneando) {
+escaneando = false;
+const isbnOriginal = barcodes[0].rawValue;
+detectorDeCodigos = null;
+detenerCamara();
+const isbnLimpio = isbnOriginal.trim().replace(/[^0-9X]/gi, "");
+document.getElementById('num-isbn').innerText = isbnLimpio;
 
-            try {
-                const constraints = {
-                    video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } }
-                };
-                
-                streamActual = await navigator.mediaDevices.getUserMedia(constraints);
-                const video = document.getElementById('webcam');
-                video.srcObject = streamActual;
-                
-                document.getElementById('video-container').style.display = 'block';
-                actualizarEstado("Escáner activo. Enfoca el código de barras...");
-                escaneando = true;
+actualizarEstado("Buscando en Google Books...");
+setTimeout(() => { buscarLibroPorISBN(isbnLimpio); }, 100);
+} else {
+if (escaneando) animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
+}
+}).catch(() => { if (escaneando) animationFrameId = requestAnimationFrame(procesarFrameEnVivo); });
+}
+function detenerCamara() {
+if (animationFrameId) cancelAnimationFrame(animationFrameId);
+if (streamActual) streamActual.getTracks().forEach(track => track.stop());
+document.getElementById('video-container').style.display = 'none';
+document.getElementById('btn-iniciar').style.display = 'block';
+}
 
-                video.onloadedmetadata = () => { procesarFrameEnVivo(); };
-            } catch (err) {
-                console.error(err);
-                actualizarEstado("Error al abrir cámara.");
-                document.getElementById('btn-iniciar').style.display = 'block';
-            }
-        }
+async function buscarLibroPorISBN(isbn) {
+const urlDirecta = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn + "&key=AIzaSyAI3ZbntVgR9XRAB4dQk2Qa_t8KAbHGbck";
+try {
+const response = await fetch(urlDirecta);
+const data = await response.json()
 
-        function procesarFrameEnVivo() {
-            if (!escaneando || !detectorDeCodigos) return;
-            const video = document.getElementById('webcam');
-            
-            detectorDeCodigos.detect(video)
-                .then(barcodes => {
-                    if (barcodes && barcodes.length > 0 && escaneando) {
-                        escaneando = false;
-                        
-                        // TU CORRECCIÓN: Extracción estricta usando la posición cero de la lista
-                        const isbnOriginal = barcodes[0].rawValue;
-                        
-                        detectorDeCodigos = null; 
-                        detenerCamara();
-                        
-                        const isbnLimpio = isbnOriginal.trim().replace(/[^0-9X]/gi, "");
-                        document.getElementById('num-isbn').innerText = isbnLimpio;
-                        
-                        actualizarEstado("Lanzando consulta directa a Google Books...");
-                        setTimeout(() => { buscarLibroPorISBN(isbnLimpio); }, 100);
-                    } else {
-                        if (escaneando) animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
-                    }
-                })
-                .catch(err => {
-                    if (escaneando) animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
-                });
-        }
+if (data && data.totalItems > 0 && data.items && data.items.length > 0) {
+const info = data.items[0].volumeInfo;
+let autor = info.authors ? info.authors.join(', ') : 'Autor desconocido';
+let portada = 'placeholder.com';
+if (info.imageLinks) {
+let linkFoto = info.imageLinks.thumbnail || info.imageLinks.smallThumbnail;
+if (linkFoto) portada = linkFoto.replace('http://', 'https://');
+}
 
-        function detenerCamara() {
-            if (animationFrameId) cancelAnimationFrame(animationFrameId);
-            if (streamActual) streamActual.getTracks().forEach(track => track.stop());
-            document.getElementById('video-container').style.display = 'none';
-            document.getElementById('btn-iniciar').style.display = 'block';
-        }
+libroActual = { isbn: isbn, portada: portada };
 
-        // TU CORRECCIÓN: Ruta directa unificada sin proxies
-        async function buscarLibroPorISBN(isbn) {
-            const urlDirecta = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn + "&key=AIzaSyAI3ZbntVgR9XRAB4dQk2Qa_t8KAbHGbck";
-            
-            try {
-                const response = await fetch(urlDirecta);
-                const data = await response.json();
-                
-                if (data && data.totalItems > 0 && data.items && data.items.length > 0) {
-                    const info = data.items[0].volumeInfo; 
-                    
-                    let nombresAutores = 'Autor desconocido';
-                    if (info.authors && info.authors.length > 0) {
-                        nombresAutores = info.authors.join(', ');
-                    }
+document.getElementById('form-titulo').value = info.title || "";
+document.getElementById('form-autor').value = autor;
+document.getElementById('form-estanteria').value = "";
+document.getElementById('form-balda').value = "";
+document.getElementById('libro-portada').src = portada;
+document.getElementById('libro-portada').style.display = 'block';
+document.getElementById('resultado').style.display = 'block';
+actualizarEstado("¡Libro cargado de internet! Completa la estantería.");
+} else {
+actualizarEstado("No encontrado. Introduce los datos manualmente.");
+abrirFormularioManual();
+document.getElementById('num-isbn').innerText = isbn;
+libroActual.isbn = isbn;
+}
+} catch (error) {
+actualizarEstado("Fallo de red. Entrando a modo manual.");
+abrirFormularioManual();
+}
+}
 
-                    let urlPortada = 'https://placeholder.com';
-                    if (info.imageLinks && info.imageLinks.thumbnail) {
-                        urlPortada = info.imageLinks.thumbnail.replace('http://', 'https://');
-                    }
+function guardarLibroDefinitivo() {
+let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
+// Recoger los valores del formulario editados por el usuario
+let estanteriaIn = document.getElementById('form-estanteria').value.trim() || "Sin estantería";
+let baldaIn = document.getElementById('form-balda').value.trim() || "General";
 
-                    libroActual = { titulo: info.title, autores: nombresAutores, portada: urlPortada };
-                    
-                    document.getElementById('libro-titulo').innerText = libroActual.titulo;
-                    document.getElementById('libro-autor').innerText = "Por: " + libroActual.autores;
-                    document.getElementById('libro-portada').src = libroActual.portada;
-                    document.getElementById('resultado').style.display = 'block';
-                    
-                    actualizarEstado("¡Libro cargado con éxito!");
-                } else {
-                    actualizarEstado("No encontrado en el catálogo de Google.");
-                }
-            } catch (error) {
-                actualizarEstado("Error al interpretar la estructura de datos.");
-                console.error(error);
-            }
-        }
+libroActual.titulo = document.getElementById('form-titulo').value.trim() || "Título Desconocido";
+libroActual.autores = document.getElementById('form-autor').value.trim() || "Autor Desconocido";
+libroActual.estanteria = estanteriaIn;
+libroActual.balda = baldaIn;
+// Filtro anti-duplicados (solo si no es alta manual pura sin ISBN)
+if(!libroActual.isbn.startsWith("MANUAL-")) {
+let yaExiste = biblioteca.some(l => l.isbn === libroActual.isbn);
+if (yaExiste) {
+alert("¡Atención! Este libro ya está registrado en tu biblioteca.");
+return;
+}
+}
+biblioteca.push(libroActual);
+localStorage.setItem('misLibros', JSON.stringify(biblioteca));
+alert("¡Libro guardado físicamente en: " + estanteriaIn + " / " + baldaIn);
 
-        function guardarLibro() {
-            let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
-            biblioteca.push(libroActual);
-            localStorage.setItem('misLibros', JSON.stringify(biblioteca));
-            actualizarEstado("¡Libro guardado en tu colección!");
-            document.getElementById('resultado').style.display = 'none';
-            document.getElementById('num-isbn').innerText = "Ninguno";
-        }
+document.getElementById('resultado').style.display = 'none';
+document.getElementById('num-isbn').innerText = "Ninguno";
+actualizarEstado("Libro añadido con éxito.");
+}
 
-        function renderizarEstanteria() {
-            const contenedor = document.getElementById('contenedor-estanteria');
-            const avisoVacio = document.getElementById('lista-vacia');
-            let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
+function renderizarJerarquia() {
+const divCarpetas = document.getElementById('bloque-jerarquia');
+const contenedorLibros = document.getElementById('contenedor-estanteria');
+const btnVolver = document.getElementById('btn-volver-rutas');
+const txtTitulo = document.getElementById('titulo-navegacion');
+const txtVacio = document.getElementById('lista-vacia');
 
-            contenedor.innerHTML = "";
-            
-            if (biblioteca.length === 0) {
-                avisoVacio.style.display = "block";
-                return;
-            }
+let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
 
-            avisoVacio.style.display = "none";
-            
-            biblioteca.forEach(libro => {
-                const divCard = document.createElement('div');
-                divCard.className = 'item-libro';
-                divCard.innerHTML = `
-                    <img src="${libro.portada}" alt="Portada">
-                    <p class="item-titulo">${libro.titulo}</p>
-                    <p class="item-autor">${libro.autores}</p>
-                `;
-                contenedor.appendChild(divCard);
-            });
-        }
+divCarpetas.innerHTML = "";
+contenedorLibros.innerHTML = "";
+
+if (biblioteca.length === 0) {
+txtVacio.style.display = "block";
+btnVolver.style.display = "none";
+return;
+}
+txtVacio.style.display = "none";
+
+// NIVEL 1: MOSTRAR MUEBLES / ESTANTERÍAS
+if (nivelActual === "estanterias") {
+txtTitulo.innerText = "Mis Estanterías";
+btnVolver.style.display = "none";
+
+// Extraer nombres únicos de estanterías
+let estanteriasUnicas = [...new Set(biblioteca.map(l => l.estanteria))];
+
+estanteriasUnicas.forEach(est => {
+let totalEnEst = biblioteca.filter(l => l.estanteria === est).length;
+let div = document.createElement('div');
+div.className = 'item-carpeta';
+div.innerHTML = 📁 ${est} <span>(${totalEnEst} libros) ➔</span>;
+div.onclick = () => {
+estanteriaSeleccionada = est;
+nivelActual = "baldas";
+renderizarJerarquia();
+};
+divCarpetas.appendChild(div);
+});
+}
+
+// NIVEL 2: MOSTRAR BALDAS DE UNA ESTANTERÍA
+else if (nivelActual === "baldas") {
+txtTitulo.innerText = "Estantería: " + estanteriaSeleccionada;
+btnVolver.style.display = "block";
+
+let librosDeEstanteria = biblioteca.filter(l => l.estanteria === estanteriaSeleccionada);
+let baldasUnicas = [...new Set(librosDeEstanteria.map(l => l.balda))];
+
+baldasUnicas.forEach(bal => {
+let totalEnBal = librosDeEstanteria.filter(l => l.balda === bal).length;
+let div = document.createElement('div');div.className = 'item-carpeta';
+div.style.borderColor = "#28a745";
+div.innerHTML = ➖ ${bal} <span>(${totalEnBal} uds) ➔</span>;
+div.onclick = () => {
+baldaSeleccionada = bal;
+nivelActual = "libros";
+renderizarJerarquia();
+};
+divCarpetas.appendChild(div);
+});
+}
+
+// NIVEL 3: CUADRÍCULA DE LIBROS CON PORTADAS Y BORRADO
+else if (nivelActual === "libros") {
+txtTitulo.innerText = estanteriaSeleccionada + " ➔ " + baldaSeleccionada;
+btnVolver.style.display = "block";
+
+let librosFiltrados = biblioteca.filter(l => l.estanteria === estanteriaSeleccionada && l.balda === baldaSeleccionada);
+
+librosFiltrados.forEach(libro => {
+let div = document.createElement('div');
+div.className = 'item-libro';
+div.innerHTML = <img src="${libro.portada}" alt="Portada"> <p class="item-titulo">${libro.titulo}</p> <p class="item-autor">${libro.autores}</p> <button class="btn-borrar" onclick="eliminarLibroDeEstanteria('${libro.isbn}', '${libro.titulo}')">❌</button>;
+contenedorLibros.appendChild(div);
+});
+}
+}
+
+function volverAtrasJerarquia() {
+if (nivelActual === "libros") {
+nivelActual = "baldas";
+} else if (nivelActual === "baldas") {
+nivelActual = "estanterias";
+}
+renderizarJerarquia();
+}
+function eliminarLibroDeEstanteria(isbn, titulo) {
+if (confirm("¿Estás seguro de que quieres eliminar '" + titulo + "' de tu estantería?")){
+let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
+
+// Filtrar para borrar solo el libro con ese ISBN exacto
+biblioteca = biblioteca.filter(libro => libro.isbn !== isbn);
+localStorage.setItem('misLibros', JSON.stringify(biblioteca));
+
+// Recargar la pantalla actual para refrescar los cambios
+renderizarJerarquia();
+}
+}
     </script>
 </body>
 </html>

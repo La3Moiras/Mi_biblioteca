@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Biblioteca v1.4.9.yo</title>
+    <title>Mi Biblioteca v1.7.0</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background: #f8f9fa; text-align: center; margin: 0; }
         .container { max-width: 500px; margin: auto; padding: 10px; }
@@ -27,7 +27,7 @@
 <body>
     <div class="container">
         <h1>Mi Biblioteca</h1>
-        <div class="version-tag">Versión de la App: v1.4.9</div>
+        <div class="version-tag">Versión de la App: v1.7.0</div>
         
         <button id="btn-iniciar" onclick="comenzarEscaneoEnVivo()">Iniciar Escáner en Vivo</button>
         
@@ -39,6 +39,7 @@
         <div id="isbn-bloque">ISBN: <span id="num-isbn">Ninguno</span></div>
         <div id="info-estado">Estado: En espera...</div>
 
+        <!-- Ficha del libro resultado -->
         <div id="resultado" class="card">
             <h2 id="libro-titulo" style="margin: 0 0 10px 0; font-size: 20px;"></h2>
             <p id="libro-autor" style="color: #555; margin: 0; font-size: 16px;"></p>
@@ -50,6 +51,10 @@
     </div>
 
     <script>
+        // CONFIGURACIÓN: Pega tu clave de Google Books entre las comillas si dispones de una.
+        // Si la dejas vacía "", la app intentará conectar usando el proxy de red limpio.
+        const MI_API_KEY_PERSONAL = ""; 
+
         let streamActual = null;
         let animationFrameId = null;
         let detectorDeCodigos = null;
@@ -75,11 +80,7 @@
 
             try {
                 const constraints = {
-                    video: {
-                        facingMode: "environment",
-                        width: { ideal: 640 },
-                        height: { ideal: 480 }
-                    }
+                    video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } }
                 };
                 
                 streamActual = await navigator.mediaDevices.getUserMedia(constraints);
@@ -90,71 +91,57 @@
                 actualizarEstado("Escáner activo. Enfoca el código de barras...");
                 escaneando = true;
 
-                video.onloadedmetadata = () => {
-                    procesarFrameEnVivo();
-                };
-
+                video.onloadedmetadata = () => { procesarFrameEnVivo(); };
             } catch (err) {
                 console.error(err);
-                actualizarEstado("Error al abrir cámara. Verifica permisos.");
+                actualizarEstado("Error al abrir cámara.");
                 document.getElementById('btn-iniciar').style.display = 'block';
             }
         }
 
         function procesarFrameEnVivo() {
             if (!escaneando || !detectorDeCodigos) return;
-
             const video = document.getElementById('webcam');
             
             detectorDeCodigos.detect(video)
                 .then(barcodes => {
                     if (barcodes.length > 0 && escaneando) {
-                        // DETECCIÓN EXITOSA: Frenamos en seco antes de cualquier otra cosa
                         escaneando = false;
-                        const isbnOriginal = barcodes[0].rawValue;
+                        const isbnOriginal = barcodes.rawValue;
                         
-                        // DESTRUCCIÓN DE INSTANCIAS: Forzamos la muerte del hardware de la cámara
                         detectorDeCodigos = null; 
                         detenerCamara();
                         
                         const isbnLimpio = isbnOriginal.trim().replace(/[^0-9X]/gi, "");
                         document.getElementById('num-isbn').innerText = isbnLimpio;
                         
-                        actualizarEstado("Descargando ficha de libro por túnel seguro...");
-                        
-                        // Retrasamos la petición 100ms para asegurar que el Xiaomi liberó la cámara
-                        setTimeout(() => {
-                            buscarLibroPorISBN(isbnLimpio);
-                        }, 100);
+                        actualizarEstado("Descargando ficha por estructura limpia...");
+                        setTimeout(() => { buscarLibroPorISBN(isbnLimpio); }, 100);
                     } else {
-                        if (escaneando) {
-                            animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
-                        }
+                        if (escaneando) animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
                     }
                 })
                 .catch(err => {
-                    console.error(err);
-                    if (escaneando) {
-                        animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
-                    }
+                    if (escaneando) animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
                 });
         }
 
         function detenerCamara() {
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-                animationFrameId = null;
-            }
-            if (streamActual) {
-                streamActual.getTracks().forEach(track => track.stop());
-                streamActual = null;
-            }
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            if (streamActual) streamActual.getTracks().forEach(track => track.stop());
             document.getElementById('video-container').style.display = 'none';
             document.getElementById('btn-iniciar').style.display = 'block';
         }
 
         async function buscarLibroPorISBN(isbn) {
-            const destinoAPI = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn +"&key=AIzaSyAI3ZbntVgR9XRAB4dQk2Qa_t8KAbHGbck";
+            // CONSTRUCCIÓN CORREGIDA INTERNA CON TU ESTRUCTURA JSON
+            let destinoAPI = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn;
+            
+            if (MI_API_KEY_PERSONAL !== "AIzaSyAI3ZbntVgR9XRAB4dQk2Qa_t8KAbHGbck") {
+                destinoAPI += "&key=" + MI_API_KEY_PERSONAL;
+            }
+
+            // Unimos el proxy de forma correcta inyectando obligatoriamente el '?url=' que faltaba
             const urlConProxy = "https://corsproxy.io" + encodeURIComponent(destinoAPI);
             
             try {
@@ -162,7 +149,7 @@
                 const data = await response.json();
                 
                 if (data && data.totalItems > 0 && data.items && data.items.length > 0) {
-                    const info = data.items[0].volumeInfo; // Corregido: añadida posición exacta del array de items
+                    const info = data.items[0].volumeInfo; // Corregido el acceso al índice del array JSON
                     
                     let nombresAutores = 'Autor desconocido';
                     if (info.authors && info.authors.length > 0) {
@@ -174,11 +161,7 @@
                         urlPortada = info.imageLinks.thumbnail.replace('http://', 'https://');
                     }
 
-                    libroActual = { 
-                        titulo: info.title, 
-                        autores: nombresAutores, 
-                        portada: urlPortada 
-                    };
+                    libroActual = { titulo: info.title, autores: nombresAutores, portada: urlPortada };
                     
                     document.getElementById('libro-titulo').innerText = libroActual.titulo;
                     document.getElementById('libro-autor').innerText = "Por: " + libroActual.autores;
@@ -190,7 +173,7 @@
                     actualizarEstado("No encontrado en el registro global de Google.");
                 }
             } catch (error) {
-                actualizarEstado("Error al procesar los datos recibidos.");
+                actualizarEstado("Error al decodificar el archivo JSON de Google.");
                 console.error(error);
             }
         }

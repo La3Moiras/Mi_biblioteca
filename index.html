@@ -84,7 +84,7 @@
         <button id="btn-nav-est" class="nav-btn" onclick="cambiarPestaña('estanteria')">📚 Mi Estantería</button>
     </nav>
 
-    <script>
+<script>
         let streamActual = null;
         let animationFrameId = null;
         let detectorDeCodigos = null;
@@ -95,7 +95,6 @@
             document.getElementById('info-estado').innerText = "Acción: " + txt;
         }
 
-        // Control de navegación entre pestañas
         function cambiarPestaña(pestaña) {
             document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('activo'));
@@ -151,10 +150,10 @@
             
             detectorDeCodigos.detect(video)
                 .then(barcodes => {
-                    if (barcodes.length > 0 && escaneando) {
+                    if (barcodes && barcodes.length > 0 && escaneando) {
                         escaneando = false;
                         
-                        // TU MEJORA: Extracción estricta mediante el array indexado de la respuesta nativa
+                        // TU CORRECCIÓN: Extracción estricta usando la posición cero de la lista
                         const isbnOriginal = barcodes[0].rawValue;
                         
                         detectorDeCodigos = null; 
@@ -181,73 +180,78 @@
             document.getElementById('btn-iniciar').style.display = 'block';
         }
 
-        // TU MEJORA: Ruta directa unificada sin proxies
+        // TU CORRECCIÓN: Ruta directa unificada sin proxies
         async function buscarLibroPorISBN(isbn) {
             const urlDirecta = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn + "&key=AIzaSyAI3ZbntVgR9XRAB4dQk2Qa_t8KAbHGbck";
             
             try {
                 const response = await fetch(urlDirecta);
                 const data = await response.json();
+                
+                if (data && data.totalItems > 0 && data.items && data.items.length > 0) {
+                    const info = data.items[0].volumeInfo; 
+                    
+                    let nombresAutores = 'Autor desconocido';
+                    if (info.authors && info.authors.length > 0) {
+                        nombresAutores = info.authors.join(', ');
+                    }
 
-if (data && data.totalItems > 0 && data.items && data.items.length > 0) {
-const info = data.items[0].volumeInfo;
-let nombresAutores = 'Autor desconocido';
-if (info.authors && info.authors.length > 0) {
-nombresAutores = info.authors.join(', ');
-}
-let urlPortada = 'placeholder.com';
-if (info.imageLinks && info.imageLinks.thumbnail) {
-urlPortada = info.imageLinks.thumbnail.replace('http://', 'https://');
-}
+                    let urlPortada = 'https://placeholder.com';
+                    if (info.imageLinks && info.imageLinks.thumbnail) {
+                        urlPortada = info.imageLinks.thumbnail.replace('http://', 'https://');
+                    }
 
-libroActual = { titulo: info.title, autores: nombresAutores, portada: urlPortada };
+                    libroActual = { titulo: info.title, autores: nombresAutores, portada: urlPortada };
+                    
+                    document.getElementById('libro-titulo').innerText = libroActual.titulo;
+                    document.getElementById('libro-autor').innerText = "Por: " + libroActual.autores;
+                    document.getElementById('libro-portada').src = libroActual.portada;
+                    document.getElementById('resultado').style.display = 'block';
+                    
+                    actualizarEstado("¡Libro cargado con éxito!");
+                } else {
+                    actualizarEstado("No encontrado en el catálogo de Google.");
+                }
+            } catch (error) {
+                actualizarEstado("Error al interpretar la estructura de datos.");
+                console.error(error);
+            }
+        }
 
-document.getElementById('libro-titulo').innerText = libroActual.titulo;
-document.getElementById('libro-autor').innerText = "Por: " + libroActual.autores;
-document.getElementById('libro-portada').src = libroActual.portada;
-document.getElementById('resultado').style.display = 'block';
+        function guardarLibro() {
+            let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
+            biblioteca.push(libroActual);
+            localStorage.setItem('misLibros', JSON.stringify(biblioteca));
+            actualizarEstado("¡Libro guardado en tu colección!");
+            document.getElementById('resultado').style.display = 'none';
+            document.getElementById('num-isbn').innerText = "Ninguno";
+        }
 
-actualizarEstado("¡Libro cargado con éxito!");
-} else {
-actualizarEstado("No encontrado en el catálogo de Google.");
-}
-} catch (error) {
-actualizarEstado("Error al interpretar la estructura de datos.");
-console.error(error);
-}
-}
-// Guarda el libro en el disco del propio teléfono
-function guardarLibro() {
-let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
-biblioteca.push(libroActual);
-localStorage.setItem('misLibros', JSON.stringify(biblioteca));
-actualizarEstado("¡Libro guardado en tu colección!");
-document.getElementById('resultado').style.display = 'none';
-document.getElementById('num-isbn').innerText = "Ninguno";
-}
+        function renderizarEstanteria() {
+            const contenedor = document.getElementById('contenedor-estanteria');
+            const avisoVacio = document.getElementById('lista-vacia');
+            let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
 
-// Dibuja la cuadrícula de portadas en la estantería
-function renderizarEstanteria() {
-const contenedor = document.getElementById('contenedor-estanteria');
-const avisoVacio = document.getElementById('lista-vacia');
-let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
+            contenedor.innerHTML = "";
+            
+            if (biblioteca.length === 0) {
+                avisoVacio.style.display = "block";
+                return;
+            }
 
-contenedor.innerHTML = "";
-
-if (biblioteca.length === 0) {
-avisoVacio.style.display = "block";
-return;
-}
-
-avisoVacio.style.display = "none";
-
-biblioteca.forEach(libro => {
-const divCard = document.createElement('div');
-divCard.className = 'item-libro';
-divCard.innerHTML = <img src="${libro.portada}" alt="Portada"> <p class="item-titulo">${libro.titulo}</p> <p class="item-autor">${libro.autores</p>;
-contenedor.appendChild(divCard);
-});
-}
-</script>
+            avisoVacio.style.display = "none";
+            
+            biblioteca.forEach(libro => {
+                const divCard = document.createElement('div');
+                divCard.className = 'item-libro';
+                divCard.innerHTML = `
+                    <img src="${libro.portada}" alt="Portada">
+                    <p class="item-titulo">${libro.titulo}</p>
+                    <p class="item-autor">${libro.autores}</p>
+                `;
+                contenedor.appendChild(divCard);
+            });
+        }
+    </script>
 </body>
 </html>

@@ -103,7 +103,7 @@
                 .then(barcodes => {
                     if (barcodes.length > 0 && escaneando) {
                         escaneando = false;
-                        const isbnOriginal = barcodes.rawValue;
+                        const isbnOriginal = barcodes[0].rawValue;
                         
                         detectorDeCodigos = null; 
                         detenerCamara();

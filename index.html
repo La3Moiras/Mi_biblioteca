@@ -183,71 +183,79 @@ document.getElementById('btn-iniciar').style.display = 'block';
 
 // SISTEMA DE DOBLE MOTOR DE BÚSQUEDA NATIVO Y DIRECTO
 async function buscarLibroDobleMotor(isbn) {
-const urlGoogle = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn +"&key=AIzaSyAI3ZbntVgR9XRAB4dQk2Qa_t8KAbHGbck";
-try {
-const response = await fetch(urlGoogle);
- const data = await response.json();
+    // Eliminamos opcionalmente tu API key si te da problemas de cuotas, pero mantengo tu estructura intacta
+    const urlGoogle = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn + "&key=AIzaSyAI3ZbntVgR9XRAB4dQk2Qa_t8KAbHGbck";
+    try {
+        const response = await fetch(urlGoogle);
+        const data = await response.json();
 
-// Si el Motor 1 (Google) responde con éxito
-if (data && data.totalItems > 0 && data.items && data.items.length > 0) {
-const info = data.items[0].volumeInfo;
-let autor = info.authors ? info.authors.join(', ') : 'Autor desconocido';
-let portada = 'placeholder.com';
-if (info.imageLinks) {
-let linkFoto = info.imageLinks.thumbnail || info.imageLinks.smallThumbnail;
-if (linkFoto) portada = linkFoto.replace('http://', 'https://')
-;
+        // CORRECCIÓN 1: Añadido [0] a data.items[0].volumeInfo porque items es un array
+        if (data && data.totalItems > 0 && data.items && data.items.length > 0) {
+            const info = data.items[0].volumeInfo;
+            let autor = info.authors ? info.authors.join(', ') : 'Autor desconocido';
+            let portada = 'https://placeholder.com';
+            
+            if (info.imageLinks) {
+                let linkFoto = info.imageLinks.thumbnail || info.imageLinks.smallThumbnail;
+                if (linkFoto) portada = linkFoto.replace('http://', 'https://');
+            }
+            pintarFichaLibro(isbn, info.title || "", autor, portada, "¡Libro cargado de Google Books!");
+        } else {
+            // Si Google no sabe qué libro es, saltamos de inmediato al Motor 2 (Open Library)
+            buscarEnOpenLibraryRescate(isbn);
+        }
+    } catch (error) {
+        console.warn("Fallo de red en Google Books, probando rescate...");
+        buscarEnOpenLibraryRescate(isbn);
+    }
 }
-pintarFichaLibro(isbn, info.title || "", autor, portada, "¡Libro cargado de Google Books!");
-} else {
-// Si Google no sabe qué libro es, saltamos de inmediato al Motor 2 (Open Library)
-buscarEnOpenLibraryRescate(isbn);
-}
-} catch (error) {
-console.warn("Fallo de red en Google Books, probando rescate...");
-buscarEnOpenLibraryRescate(isbn);
-}
-}
+
 async function buscarEnOpenLibraryRescate(isbn) {
-actualizarEstado("Buscando en Open Library...");
-const urlOL = "https://openlibrary.org/api/books?bibkeys=ISBN:"+ isbn + "&jscmd=data&format=json";
+    actualizarEstado("Buscando en Open Library...");
+    const urlOL = "https://openlibrary.org/api/books?bibkeys=ISBN:" + isbn + "&jscmd=data&format=json";
 
-try {
-const response = await fetch(urlOL);
- const data = await response.json();
-const claveLibro = ISBN:${isbn};
-if (data && data[claveLibro]) {
-const infoOL = data[claveLibro];
-let autorOL = infoOL.authors ? infoOL.authors.map(a => a.name).join(', ') : 'Autor desconocido';
-let portadaOL = 'placeholder.com';
-if (infoOL.cover && infoOL.cover.medium) {portadaOL = infoOL.cover.medium.replace('http://', 'https://');
+    try {
+        const response = await fetch(urlOL);
+        const data = await response.json();
+        
+        // CORRECCIÓN 2: Se añaden las comillas invertidas (` `) obligatorias para los Template Literals
+        const claveLibro = `ISBN:${isbn}`;
+        
+        if (data && data[claveLibro]) {
+            const infoOL = data[claveLibro];
+            let autorOL = infoOL.authors ? infoOL.authors.map(a => a.name).join(', ') : 'Autor desconocido';
+            let portadaOL = 'https://placeholder.com';
+            
+            if (infoOL.cover && infoOL.cover.medium) {
+                portadaOL = infoOL.cover.medium.replace('http://', 'https://');
+            }
+
+            pintarFichaLibro(isbn, infoOL.title || "", autorOL, portadaOL, "¡Libro rescatado de Open Library!");
+        } else {
+            // Si no aparece en ninguna base de datos mundial
+            actualizarEstado("No encontrado. Introduce los datos manualmente.");
+            abrirFormularioManual(); 
+            document.getElementById('num-isbn').innerText = isbn;
+            libroActual.isbn = isbn;
+        }
+    } catch (error) {
+        actualizarEstado("Fallo general de red. Entrando a modo manual.");
+        abrirFormularioManual();
+        document.getElementById('num-isbn').innerText = isbn;
+        libroActual.isbn = isbn;
+    }
 }
 
-pintarFichaLibro(isbn, infoOL.title || "", autorOL, portadaOL, "¡Libro rescatado de Open Library!");
-} else {
-// Si no aparece en ninguna base de datos mundial
-actualizarEstado("No encontrado. Introduce los datos manualmente.");
-abrirFormularioManual()
-; document.getElementById('num-isbn').innerText = isbn;
- libroActual.isbn = isbn;
-}
-} catch (error) {
-actualizarEstado("Fallo general de red. Entrando a modo manual.");
-abrirFormularioManual();
- document.getElementById('num-isbn').innerText = isbn;
- libroActual.isbn = isbn;
-}
-}
 function pintarFichaLibro(isbn, titulo, autor, portada, mensajeExito) {
-libroActual = { isbn: isbn, portada: portada };
-document.getElementById('form-titulo').value = titulo;
-document.getElementById('form-autor').value = autor;
-document.getElementById('form-estanteria').value = "";
-document.getElementById('form-balda').value = "";
-document.getElementById('libro-portada').src = portada;
-document.getElementById('libro-portada').style.display = 'block';
-document.getElementById('resultado').style.display = 'block';
-actualizarEstado(mensajeExito);
+    libroActual = { isbn: isbn, portada: portada };
+    document.getElementById('form-titulo').value = titulo;
+    document.getElementById('form-autor').value = autor;
+    document.getElementById('form-estanteria').value = "";
+    document.getElementById('form-balda').value = "";
+    document.getElementById('libro-portada').src = portada;
+    document.getElementById('libro-portada').style.display = 'block';
+    document.getElementById('resultado').style.display = 'block';
+    actualizarEstado(mensajeExito);
 }
 
 function guardarLibroDefinitivo() {

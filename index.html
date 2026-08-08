@@ -181,16 +181,18 @@ document.getElementById('video-container').style.display = 'none';
 document.getElementById('btn-iniciar').style.display = 'block';
 }
 
-// SISTEMA DE DOBLE MOTOR DE BÚSQUEDA NATIVO Y DIRECTO
+// SISTEMA DE DOBLE MOTOR DE BÚSQUEDA CORREGIDO
 async function buscarLibroDobleMotor(isbn) {
-    // Eliminamos opcionalmente tu API key si te da problemas de cuotas, pero mantengo tu estructura intacta
+    // Mantén tu clave aquí, pero recuerda restringirla en la consola de Google Cloud por HTTP Referrer si publicas la web
     const urlGoogle = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn + "&key=AIzaSyAI3ZbntVgR9XRAB4dQk2Qa_t8KAbHGbck";
+    
     try {
         const response = await fetch(urlGoogle);
         const data = await response.json();
 
-        // CORRECCIÓN 1: Añadido [0] a data.items[0].volumeInfo porque items es un array
+        // Si data tiene un error de cuota (como el 429), esto vendrá vacío y saltará automáticamente al rescate
         if (data && data.totalItems > 0 && data.items && data.items.length > 0) {
+            // CORRECCIÓN: Se añade el índice [0] porque items es un array de resultados
             const info = data.items[0].volumeInfo;
             let autor = info.authors ? info.authors.join(', ') : 'Autor desconocido';
             let portada = 'https://placeholder.com';
@@ -201,7 +203,8 @@ async function buscarLibroDobleMotor(isbn) {
             }
             pintarFichaLibro(isbn, info.title || "", autor, portada, "¡Libro cargado de Google Books!");
         } else {
-            // Si Google no sabe qué libro es, saltamos de inmediato al Motor 2 (Open Library)
+            // Si el JSON viene vacío o trae el error de cuota 429, saltamos al rescate
+            console.warn("Google Books no devolvió resultados o superó la cuota. Probando Open Library...");
             buscarEnOpenLibraryRescate(isbn);
         }
     } catch (error) {
@@ -212,13 +215,13 @@ async function buscarLibroDobleMotor(isbn) {
 
 async function buscarEnOpenLibraryRescate(isbn) {
     actualizarEstado("Buscando en Open Library...");
-    const urlOL = "https://openlibrary.org/api/books?bibkeys=ISBN:" + isbn + "&jscmd=data&format=json";
+    const urlOL = "https://openlibrary.org:" + isbn + "&jscmd=data&format=json";
 
     try {
         const response = await fetch(urlOL);
         const data = await response.json();
         
-        // CORRECCIÓN 2: Se añaden las comillas invertidas (` `) obligatorias para los Template Literals
+        // CORRECCIÓN SINTÁCTICA: Se usan comillas invertidas obligatorias para leer la clave dinámica de Open Library
         const claveLibro = `ISBN:${isbn}`;
         
         if (data && data[claveLibro]) {
@@ -232,14 +235,14 @@ async function buscarEnOpenLibraryRescate(isbn) {
 
             pintarFichaLibro(isbn, infoOL.title || "", autorOL, portadaOL, "¡Libro rescatado de Open Library!");
         } else {
-            // Si no aparece en ninguna base de datos mundial
+            // Si tampoco existe en Open Library
             actualizarEstado("No encontrado. Introduce los datos manualmente.");
             abrirFormularioManual(); 
             document.getElementById('num-isbn').innerText = isbn;
             libroActual.isbn = isbn;
         }
     } catch (error) {
-        actualizarEstado("Fallo general de red. Entrando a modo manual.");
+        actualizarEstado("Fallo general de red en Open Library. Entrando a modo manual.");
         abrirFormularioManual();
         document.getElementById('num-isbn').innerText = isbn;
         libroActual.isbn = isbn;

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Biblioteca v3.1.0</title>
+    <title>Mi Biblioteca v3.2.0</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background: #f1f3f5; text-align: center; margin: 0; padding-bottom: 90px; color: #333; }
         .container { max-width: 500px; margin: auto; padding: 10px; }
@@ -57,7 +57,7 @@
         <!-- PESTAÑA 1: ESCÁNER -->
         <div id="sec-escaner" class="seccion activa">
             <h1>Mi Biblioteca</h1>
-            <div class="version-tag">APP ENGINE v3.1.0</div>
+            <div class="version-tag">APP ENGINE v3.2.0</div>
             
             <button id="btn-iniciar" onclick="comenzarEscaneoEnVivo()">📷 Iniciar Escáner en Vivo</button>
             <button id="btn-manual-toggle" onclick="abrirFormularioManual()" style="background:#28a745; margin-top:0; box-shadow: 0 4px 6px rgba(40,167,69,0.15);">📝 Adición Manual</button>
@@ -135,17 +135,17 @@
             document.getElementById('num-isbn').innerText = "Manual";
             libroActual = { isbn: "MANUAL-" + Date.now(), portada: "https://placeholder.com" };
             actualizarEstado("Formulario manual abierto.");
-        }
+}
 async function comenzarEscaneoEnVivo() {
 if (!('BarcodeDetector' in window)) { actualizarEstado("Navegador incompatible.");
- return; 
-}
+ return;
+ }
 document.getElementById('btn-iniciar').style.display = 'none';
 document.getElementById('resultado').style.display = 'none';
 document.getElementById('num-isbn').innerText = "Leyendo...";
 detectorDeCodigos = new BarcodeDetector({ formats: ['ean_13', 'ean_8'] });
 try {
-const constraints = { video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } } };
+const constraints = { video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } }};
 streamActual = await navigator.mediaDevices.getUserMedia(constraints);
 document.getElementById('webcam').srcObject = streamActual;
 document.getElementById('video-container').style.display = 'block';
@@ -153,8 +153,8 @@ actualizarEstado("Enfoca el código de barras...");
 escaneando = true;
 document.getElementById('webcam').onloadedmetadata = () => { procesarFrameEnVivo(); 
 };
-} catch (err) {
- actualizarEstado("Error de cámara."); 
+} catch (err) { 
+actualizarEstado("Error de cámara."); 
 document.getElementById('btn-iniciar').style.display = 'block'; 
 }
 }
@@ -166,14 +166,13 @@ detectorDeCodigos = null;
 detenerCamara();
 const isbnLimpio = isbnOriginal.trim().replace(/[^0-9X]/gi, "");
 document.getElementById('num-isbn').innerText = isbnLimpio;
-actualizarEstado("Buscando en Google Books...");
-setTimeout(() => { buscarLibroPorISBN(isbnLimpio); }, 100);
+actualizarEstado("Buscando en Google Books)...");
+setTimeout(() => { buscarLibroDobleMotor(isbnLimpio); }, 100);
 } else { 
-if (escaneando) animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
- }
+if (escaneando) animationFrameId = requestAnimationFrame(procesarFrameEnVivo); 
+}
 }).catch(() => { if (escaneando) animationFrameId = requestAnimationFrame(procesarFrameEnVivo); });
 }
-
 
 function detenerCamara() {
 if (animationFrameId) cancelAnimationFrame(animationFrameId);
@@ -182,77 +181,105 @@ document.getElementById('video-container').style.display = 'none';
 document.getElementById('btn-iniciar').style.display = 'block';
 }
 
-async function buscarLibroPorISBN(isbn) {
-const urlDirecta =  "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn +"&key=AIzaSyAI3ZbntVgR9XRAB4dQk2Qa_t8KAbHGbck";;
+// SISTEMA DE DOBLE MOTOR DE BÚSQUEDA NATIVO Y DIRECTO
+async function buscarLibroDobleMotor(isbn) {
+const urlGoogle = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn +"&key=AIzaSyAI3ZbntVgR9XRAB4dQk2Qa_t8KAbHGbck";
 try {
-const response = await fetch(urlDirecta); 
-const data = await response.json();
+const response = await fetch(urlGoogle);
+ const data = await response.json();
 
+// Si el Motor 1 (Google) responde con éxito
 if (data && data.totalItems > 0 && data.items && data.items.length > 0) {
 const info = data.items[0].volumeInfo;
 let autor = info.authors ? info.authors.join(', ') : 'Autor desconocido';
 let portada = 'placeholder.com';
 if (info.imageLinks) {
 let linkFoto = info.imageLinks.thumbnail || info.imageLinks.smallThumbnail;
-if (linkFoto) portada = linkFoto.replace('http://', 'https://');
+if (linkFoto) portada = linkFoto.replace('http://', 'https://')
+;
+}
+pintarFichaLibro(isbn, info.title || "", autor, portada, "¡Libro cargado de Google Books!");
+} else {
+// Si Google no sabe qué libro es, saltamos de inmediato al Motor 2 (Open Library)
+buscarEnOpenLibraryRescate(isbn);
+}
+} catch (error) {
+console.warn("Fallo de red en Google Books, probando rescate...");
+buscarEnOpenLibraryRescate(isbn);
+}
+}
+async function buscarEnOpenLibraryRescate(isbn) {
+actualizarEstado("Buscando en Open Library...");
+const urlOL = "https://openlibrary.org/api/books?bibkeys=ISBN:"+ isbn + "&jscmd=data&format=json";
+
+try {
+const response = await fetch(urlOL);
+ const data = await response.json();
+const claveLibro = ISBN:${isbn};
+if (data && data[claveLibro]) {
+const infoOL = data[claveLibro];
+let autorOL = infoOL.authors ? infoOL.authors.map(a => a.name).join(', ') : 'Autor desconocido';
+let portadaOL = 'placeholder.com';
+if (infoOL.cover && infoOL.cover.medium) {portadaOL = infoOL.cover.medium.replace('http://', 'https://');
 }
 
+pintarFichaLibro(isbn, infoOL.title || "", autorOL, portadaOL, "¡Libro rescatado de Open Library!");
+} else {
+// Si no aparece en ninguna base de datos mundial
+actualizarEstado("No encontrado. Introduce los datos manualmente.");
+abrirFormularioManual()
+; document.getElementById('num-isbn').innerText = isbn;
+ libroActual.isbn = isbn;
+}
+} catch (error) {
+actualizarEstado("Fallo general de red. Entrando a modo manual.");
+abrirFormularioManual();
+ document.getElementById('num-isbn').innerText = isbn;
+ libroActual.isbn = isbn;
+}
+}
+function pintarFichaLibro(isbn, titulo, autor, portada, mensajeExito) {
 libroActual = { isbn: isbn, portada: portada };
-
-document.getElementById('form-titulo').value = info.title || "";
+document.getElementById('form-titulo').value = titulo;
 document.getElementById('form-autor').value = autor;
 document.getElementById('form-estanteria').value = "";
 document.getElementById('form-balda').value = "";
 document.getElementById('libro-portada').src = portada;
 document.getElementById('libro-portada').style.display = 'block';
 document.getElementById('resultado').style.display = 'block';
-actualizarEstado("¡Libro cargado! Completa los campos.");
-} else { 
-actualizarEstado("No encontrado."); 
-abrirFormularioManual(); 
-document.getElementById('num-isbn').innerText = isbn; 
-libroActual.isbn = isbn; 
-}
-} catch (error) { 
-actualizarEstado("Fallo de red. Entrando a modo manual.");
-abrirFormularioManual(); 
-}
+actualizarEstado(mensajeExito);
 }
 
 function guardarLibroDefinitivo() {
 let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
-// Filtro anti-duplicados (solo si no es alta manual pura sin ISBN)
 let estanteriaIn = document.getElementById('form-estanteria').value.trim() || "Sin estantería";
 let baldaIn = document.getElementById('form-balda').value.trim() || "General";
 
 libroActual.titulo = document.getElementById('form-titulo').value.trim() || "Título Desconocido";
 libroActual.autores = document.getElementById('form-autor').value.trim() || "Autor Desconocido";
-libroActual.estanteria = estanteriaIn; 
-libroActual.balda = baldaIn;
+libroActual.estanteria = estanteriaIn;
+ libroActual.balda = baldaIn;
 
 // Filtro anti-duplicados (solo si no es alta manual pura sin ISBN)
 if(!libroActual.isbn.startsWith("MANUAL-")) {
 let yaExiste = biblioteca.some(l => l.isbn === libroActual.isbn);
-if (yaExiste) {
-alert("¡Atención! Este libro ya está registrado.");
-limpiarFormulario(); 
-// MEJORA 1: Resetea todo el formulario si está duplicado
-actualizarEstado("Duplicado detectado. Formulario limpiado.");
-return;
+if (yaExiste) {alert("¡Atención! Este libro ya está registrado.");
+limpiarFormulario();
+ return;
 }
 }
-biblioteca.push(libroActual); 
-localStorage.setItem('misLibros', JSON.stringify(biblioteca));
+biblioteca.push(libroActual);
+ localStorage.setItem('misLibros', JSON.stringify(biblioteca));
 alert("¡Guardado en: " + estanteriaIn + " / " + baldaIn);
-limpiarFormulario(); 
-actualizarEstado("Libro añadido con éxito.");
+limpiarFormulario();
+ actualizarEstado("Libro añadido con éxito.");
 }
 
 function renderizarJerarquia() {
 const divCarpetas = document.getElementById('bloque-jerarquia'); 
 const contenedorLibros = document.getElementById('contenedor-estanteria');
 const btnVolver = document.getElementById('btn-volver-rutas'); 
-const txtTitulo = document.getElementById('titulo-navegacion'); 
+const txtTitulo = document.getElementById('titulo-navegacion');
 const txtVacio = document.getElementById('lista-vacia');
 
 let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
@@ -261,8 +288,8 @@ divCarpetas.innerHTML = "";
 contenedorLibros.innerHTML = "";
 
 if (biblioteca.length === 0) { 
-txtVacio.style.display = "block"; 
-btnVolver.style.display = "none";
+txtVacio.style.display = "block";
+ btnVolver.style.display = "none"; 
 return; 
 }
 txtVacio.style.display = "none";
@@ -270,7 +297,7 @@ txtVacio.style.display = "none";
 // NIVEL 1: MOSTRAR MUEBLES / ESTANTERÍAS
 if (nivelActual === "estanterias") {
 txtTitulo.innerText = "Mis Estanterías";
-btnVolver.style.display = "none";
+ btnVolver.style.display = "none";
 
 // Extraer nombres únicos de estanterías
 let estanteriasUnicas = [...new Set(biblioteca.map(l => l.estanteria))];
@@ -279,77 +306,78 @@ estanteriasUnicas.forEach(est => {
 let totalEnEst = biblioteca.filter(l => l.estanteria === est).length;
 let div = document.createElement('div');
 div.className = 'item-carpeta';
-div.innerHTML = `📁 ${est} <span>(${totalEnEst} libros) ➔</span>`;
-div.onclick = () => { 
-estanteriaSeleccionada = est; 
-nivelActual = "baldas"; 
-renderizarJerarquia();
-};
+div.innerHTML = 📁 ${est} <span>(${totalEnEst} libros) ➔</span>;
+div.onclick = () => {
+ estanteriaSeleccionada = est;
+ nivelActual = "baldas";
+ renderizarJerarquia();
+ };
 divCarpetas.appendChild(div);
 });
 } 
 
 // NIVEL 2: MOSTRAR BALDAS DE UNA ESTANTERÍA
 else if (nivelActual === "baldas") {
-txtTitulo.innerText = "Estantería: " + estanteriaSeleccionada; 
-btnVolver.style.display = "block";
+txtTitulo.innerText = "Estantería: " + estanteriaSeleccionada;
+ btnVolver.style.display = "block";
 
 let librosDeEstanteria = biblioteca.filter(l => l.estanteria === estanteriaSeleccionada);
 let baldasUnicas = [...new Set(librosDeEstanteria.map(l => l.balda))];
 
 baldasUnicas.forEach(bal => {
 let totalEnBal = librosDeEstanteria.filter(l => l.balda === bal).length;
-let div = document.createElement('div'); 
-div.className = 'item-carpeta'; div.style.borderColor = "#28a745";
-div.innerHTML = `➖ ${bal} <span>(${totalEnBal} uds) ➔</span>`;
-div.onclick = () => { 
-baldaSeleccionada = bal; 
-nivelActual = "libros"; 
-renderizarJerarquia(); 
-};
+let div = document.createElement('div');
+ div.className = 'item-carpeta';
+ div.style.borderColor = "#28a745";
+div.innerHTML = 📚 ${bal} <span>(${totalEnBal} uds) ➔</span>;
+div.onclick = () => {
+ baldaSeleccionada = bal;
+ nivelActual = "libros";
+ renderizarJerarquia();
+ };
 divCarpetas.appendChild(div);
 });
-} 
+}
 
 // NIVEL 3: CUADRÍCULA DE LIBROS CON PORTADAS Y BORRADO
 else if (nivelActual === "libros") {
-txtTitulo.innerText = estanteriaSeleccionada + " ➔ " + baldaSeleccionada; 
-btnVolver.style.display = "block";
+txtTitulo.innerText = estanteriaSeleccionada + " ➔ " + baldaSeleccionada;
+ btnVolver.style.display = "block";
 
-let librosFiltrados = biblioteca.filter(l => l.estanteria === estanteriaSeleccionada && l.balda ===baldaSeleccionada);
+let librosFiltrados = biblioteca.filter(l => l.estanteria === estanteriaSeleccionada && l.balda === baldaSeleccionada);
 // Si la balda se queda vacía porque borramos el último libro, volvemos atrás automáticamente
-if (librosFiltrados.length === 0) { 
-nivelActual = "baldas"; 
-renderizarJerarquia(); 
-return; 
-}
+if (librosFiltrados.length === 0) {
+ nivelActual = "baldas";
+ renderizarJerarquia();
+ return;
+ }
 
 librosFiltrados.forEach(libro => {
-let div = document.createElement('div'); 
-div.className = 'item-libro';
+let div = document.createElement('div');
+ div.className = 'item-libro';
 div.innerHTML =` 
-<img src="${libro.portada}" alt="Portada"> 
-<p class="item-titulo">${libro.titulo}</p> 
+<img src="${libro.portada}" alt="Portada">
+ <p class="item-titulo">${libro.titulo}</p> 
 <p class="item-autor">${libro.autores}</p> 
-<button class="btn-borrar" onclick="eliminarLibroDeEstanteria(event, '${libro.isbn}','${libro.titulo}')">❌ Borrar</button>
+<button class="btn-borrar" onclick="eliminarLibroDeEstanteria(event, '${libro.isbn}', '${libro.titulo}')">❌ Borrar</button>
 `;
 contenedorLibros.appendChild(div);
 });
 }
 }
-// Aquí se cierra correctamente la función renderizarJerarquia
 
+// Aquí se cierra correctamente la función renderizarJerarquia
 function volverAtrasJerarquia() {
-if (nivelActual === "libros") {
-nivelActual = "baldas";
-}else if (nivelActual === "baldas") {
-nivelActual = "estanterias";
+if (nivelActual === "libros"){
+ nivelActual = "baldas";
+}
+else if (nivelActual === "baldas"){
+ nivelActual = "estanterias";
 }
 renderizarJerarquia();
 }
 
 function eliminarLibroDeEstanteria(event, isbn, titulo) {
-// SOLUCIÓN AL BORRADO: Detiene el clic para que no se recargue la carpeta vieja
 event.stopPropagation();
 if (confirm("¿Estás seguro de que quieres eliminar '" + titulo + "' de esta balda?")) {
 let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
@@ -363,3 +391,5 @@ renderizarJerarquia();
  </script>
 </body>
 </html>
+
+

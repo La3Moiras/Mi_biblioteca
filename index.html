@@ -3,52 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Biblioteca v3.2.0</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; background: #f1f3f5; text-align: center; margin: 0; padding-bottom: 90px; color: #333; }
+    <title>Mi Biblioteca v3.2.1</title>
+        <style>
+        body {
+            background-image: url('https://images.unsplash.com/photo-1595232208179-d8cf4ca455fc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHNlYXJjaHwxfHxwYXBlbCUyMGFudGlndW98ZW58MHx8fHwxNzg2MjI1NTkzfDA&ixlib=rb-4.1.0&q=80&w=1080'); 
+            background-size: cover; background-position: center;background-attachment: fixed;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 15px; padding-bottom: 90px;
+            text-align: center; color: #362213; /* Tono marrón tinta para mejorar la legibilidad sobre pergamino */
+        }
         .container { max-width: 500px; margin: auto; padding: 10px; }
-        .version-tag { font-size: 11px; color: #adb5bd; margin-top: -10px; margin-bottom: 20px; font-weight: bold; }
-        h1 { font-size: 26px; color: #1a202c; margin-bottom: 5px; }
+        .version-tag { font-size: 11px; color: #7e6f5c; margin-top: -10px; margin-bottom: 20px; font-weight: bold; letter-spacing: 1px; }
+        h1 { font-size: 26px; color: #2b1a0e; margin-bottom: 5px; font-weight: 800; }
         
-        #video-container { width: 100%; max-width: 360px; margin: 15px auto; background: #000; border-radius: 16px; overflow: hidden; position: relative; display: none; box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        #video-container { width: 100%; max-width: 360px; margin: 15px auto; background: #000; border-radius: 16px; overflow: hidden; position: relative; display: none; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         video { width: 100%; height: auto; display: block; }
         .laser { position: absolute; top: 50%; left: 5%; width: 90%; height: 2px; background-color: #ff3333; box-shadow: 0 0 10px #ff3333; animation: laserAnim 2s infinite alternate; }
         @keyframes laserAnim { from { top: 35%; } to { top: 65%; } }
 
-        .card { background: white; padding: 24px; border-radius: 16px; margin-top: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); text-align: left; }
-        .card label { font-weight: 700; font-size: 13px; color: #495057; display: block; margin-top: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .card input { width: 100%; padding: 12px; margin-top: 6px; border: 1px solid #ced4da; border-radius: 8px; box-sizing: border-box; font-size: 15px; background: #f8f9fa; }
-        .card input:focus { border-color: #007bff; background: white; outline: none; }
-        .card img { max-width: 120px; display: block; margin: 15px auto 0 auto; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        /* Cajetín introducir libro manual (Cuero Oscuro Estilo Libro) */
+        .card { 
+            background: linear-gradient(180deg, #5c3a21 0%, #4a2e1b 100%); background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 0), linear-gradient(180deg, #5c3a21 0%, #4a2e1b 100%);
+            background-size: 4px 4px, 100% 100%; outline: 2px dashed rgba(244, 234, 225, 0.6); outline-offset: -6px; 
+            padding: 24px; 
+            border-radius: 16px; 
+            margin-top: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.35); 
+            text-align: left; 
+        }
+ .card h2 {
+            color: #f4eae1; /* Color crema suave */
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 24px;
+	    font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8); /* Sombra para simular grabado */
+            border-bottom: 2px dashed rgba(244, 234, 225, 0.3); /* Línea divisoria de costura */
+            padding-bottom: 10px;
+        }
+        .card label { font-weight: 700; font-size: 16px; font-weight: bold; color: #f4eae1; display: block; margin-top: 14px; text-transform: uppercase; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); letter-spacing: 0.8px; }
+        .card input { width: 100%; background: #e8dabd; padding: 12px; margin-top: 6px; border: 1px solid #362213; outline: 1px dashed rgba(44, 34, 25, 0.4); outline-offset: -4px; border-radius: 8px; box-sizing: border-box; font-size: 15px; color: #2b1a0e; font-weight: 600; }
+        .card input:focus { border-color: #f4eae1; background: #eedfc2; outline: 1px dashed rgba(44, 34, 25, 0.6); outline-offset: -4px; }
+        .card img { max-width: 120px; display: block; margin: 15px auto 0 auto; border-radius: 6px; box-shadow: 0 6px 15px rgba(0,0,0,0.4); }
         
-        button { background: #007bff; color: white; border: none; padding: 14px 28px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; max-width: 280px; margin: 10px auto; display: block; box-shadow: 0 4px 6px rgba(0,123,255,0.15); transition: all 0.2s; }
-        button:active { transform: scale(0.98); background: #0056b3; }
-        
-        #isbn-bloque { background: #ffffff; padding: 10px 20px; border-radius: 30px; font-weight: bold; color: #495057; margin: 15px auto; font-size: 14px; display: block; max-width: 220px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border: 1px solid #e9ecef; }
-        #info-estado { color: #6c757d; font-size: 13px; margin: 5px 0 15px 0; font-weight: 500; }
+        /* Botones de cuero generales */
+        button { 
+            background: linear-gradient(180deg, #5c3a21 0%, #4a2e1b 100%);
+            background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 0), linear-gradient(180deg, #5c3a21 0%, #4a2e1b 100%);
+            background-size: 4px 4px, 100% 100%;
+            color: #f4eae1; 
+            border: 1px solid #362213; 
+            outline: 1px dashed rgba(244, 234, 225, 0.6);
+            outline-offset: -5px;
+            padding: 14px 28px; 
+            border-radius: 10px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            width: 100%; 
+            max-width: 280px; 
+            margin: 10px auto; 
+            display: block; 
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.15), 0 6px 12px rgba(0,0,0,0.25); 
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8); 
+            transition: all 0.2s; 
+            letter-spacing: 0.5px;
+        }
+        button:active { 
+            transform: scale(0.96); 
+            background: linear-gradient(180deg, #3d2616 0%, #4a2e1b 100%);
+            box-shadow: inset 0 3px 5px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Cartel del ISBN estilo etiqueta pergamino */
+        #isbn-bloque { background: #e8dabd; padding: 10px 28px; border-radius: 8px; font-weight: bold; color: #493323; margin: 15px auto; font-size: 14px; display: block; max-width: 220px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid #c4b293; outline: 1px dashed rgba(44, 34, 25, 0.5); outline-offset: -5px; }
+        #info-estado { color: #5a4b3e; font-size: 13px; margin: 5px 0 15px 0; font-weight: 600; }
 
         .seccion { display: none; }
         .seccion.activa { display: block; }
 
+        /* Carpetas y Estanterías estilo Madera Suave / Pergamino */
         .lista-carpetas { margin-top: 20px; display: flex; flex-direction: column; gap: 12px; }
-        .item-carpeta { background: white; padding: 18px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); text-align: left; font-weight: 700; font-size: 16px; color: #2d3748; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-left: 6px solid #007bff; transition: background 0.2s; }
-        .item-carpeta:active { background: #f8f9fa; }
-        .item-carpeta span { font-size: 13px; color: #a0aec0; font-weight: 500; }
+        .item-carpeta { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(4px); padding: 18px; border-radius: 12px; box-shadow: 0 4px 12px rgba(44,34,25,0.08); text-align: left; font-weight: 700; font-size: 16px; color: #2b1a0e; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-left: 6px solid #5c3a21; transition: background 0.2s; }
+        .item-carpeta:active { background: rgba(232, 218, 189, 0.9); }
+        .item-carpeta span { font-size: 13px; color: #7e6f5c; font-weight: 600; }
         
+        /* Cuadrícula de libros integrados en el fondo */
         .estanteria { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px; }
-        .item-libro { background: white; padding: 14px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); text-align: left; position: relative; display: flex; flex-direction: column; justify-content: space-between; min-height: 210px; }
-        .item-libro img { max-width: 90px; display: block; margin: 0 auto 10px auto; border-radius: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-        .item-titulo { font-size: 14px; font-weight: 700; margin: 0; color: #1a202c; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; padding-right: 22px; }
-        .item-autor { font-size: 12px; color: #718096; margin: 4px 0 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .item-libro { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(4px); padding: 14px; border-radius: 14px; box-shadow: 0 4px 12px rgba(44,34,25,0.08); text-align: left; position: relative; display: flex; flex-direction: column; justify-content: space-between; min-height: 210px; border: 1px solid rgba(210, 195, 165, 0.5); }
+        .item-libro img { max-width: 90px; display: block; margin: 0 auto 10px auto; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+        .item-titulo { font-size: 14px; font-weight: 700; margin: 0; color: #2b1a0e; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; padding-right: 22px; }
+        .item-autor { font-size: 12px; color: #5a4b3e; margin: 4px 0 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         
         .btn-borrar { position: absolute; top: 12px; right: 12px; background: #fff5f5; border: 1px solid #fed7d7; color: #e53e3e; font-size: 12px; cursor: pointer; padding: 4px 6px; border-radius: 6px; font-weight: bold; width: auto; margin: 0; display: inline; z-index: 10; }
         .btn-borrar:active { background: #fed7d7; }
 
-        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #edf2f7; display: flex; justify-content: space-around; padding: 10px 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.04); z-index: 1000; }
-        .nav-btn { background: none; border: none; font-size: 13px; color: #a0aec0; font-weight: 700; cursor: pointer; padding: 8px 12px; width: auto; margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .nav-btn.activo { color: #007bff; }
+       /* Barra de navegación inferior estilo Madera Oscura/Cuero */
+        .nav-bar { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            width: 100%; 
+            background: linear-gradient(180deg, #3d2616 0%, #2b1a0e 100%); 
+            border-top: 1px solid #1a1009; 
+            display: flex; 
+            justify-content: space-around; 
+            padding: 10px 0; 
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.3); 
+            z-index: 1000; 
+        }
+         .nav-btn { 
+            background: linear-gradient(180deg, #2d5a27 0%, #1e3f1a 100%); 
+            border: none; 
+            font-size: 13px; 
+            color: #a4c49e; /* Tono verde crema apagado para botones inactivos */
+            font-weight: 700; 
+            cursor: pointer; 
+            padding: 8px 12px; 
+            width: auto; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 4px; 
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.6); 
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
         
-        .btn-atras { background: #edf2f7; color: #4a5568; padding: 8px 16px; font-size: 13px; display: inline-block; width: auto; margin-bottom: 15px; float: left; border-radius: 8px; }
+        /* Pestaña activa: Letras crema fijas y costura interna simulada para resaltar */
+        .nav-btn.activo { 
+            color: #f4eae1; /* Color crema suave para el texto */
+            /* Se elimina el border-bottom blanco y se añade costura interna sutil */
+            outline: 1px dashed rgba(244, 234, 225, 0.4);
+            outline-offset: -3px;
+ background: linear-gradient(180deg, #2d5a27 0%, #1e3f1a 100%);
+        }
     </style>
 </head>
 <body>
@@ -57,10 +148,10 @@
         <!-- PESTAÑA 1: ESCÁNER -->
         <div id="sec-escaner" class="seccion activa">
             <h1>Mi Biblioteca</h1>
-            <div class="version-tag">APP ENGINE v3.2.0</div>
+            <div class="version-tag">APP ENGINE v3.2.1</div>
             
             <button id="btn-iniciar" onclick="comenzarEscaneoEnVivo()">📷 Iniciar Escáner en Vivo</button>
-            <button id="btn-manual-toggle" onclick="abrirFormularioManual()" style="background:#28a745; margin-top:0; box-shadow: 0 4px 6px rgba(40,167,69,0.15);">📝 Adición Manual</button>
+            <button id="btn-manual-toggle" onclick="abrirFormularioManual()" style="background: linear-gradient(180deg, #2d5a27 0%, #1e3f1a 100%); margin-top:0; box-shadow: 0 6px 12px rgba(0,0,0,0.25);">📝 Adición Manual</button>
             
             <div id="video-container">
                 <video id="webcam" autoplay playsinline></video>
@@ -77,7 +168,8 @@
                 <label>Estantería / Habitación:</label><input type="text" id="form-estanteria" placeholder="Ej: Salón, Estudio...">
                 <label>Balda / Estante:</label><input type="text" id="form-balda" placeholder="Ej: Balda 1, Superior...">
                 <img id="libro-portada" src="" alt="Portada" style="display:none;">
-                <button onclick="guardarLibroDefinitivo()" style="background: #28a745; max-width: 100%; margin-top:20px; box-shadow: 0 4px 6px rgba(40,167,69,0.15);">💾 Guardar Libro</button>
+                <button onclick="guardarLibroDefinitivo()" style="background: linear-gradient(180deg, #2d5a27 0%, #1e3f1a 100%);outline: 2px dashed rgba(244, 234, 225, 0.6);
+            outline-offset: -6px;; max-width: 100%; margin-top:20px; box-shadow: 0 6px 12px rgba(0,0,0,0.25);">💾 Guardar Libro</button>
             </div>
         </div>
 
@@ -98,7 +190,6 @@
         <button id="btn-nav-esc" class="nav-btn activo" onclick="cambiarPestaña('escaner')"><span>📷</span>Escáner</button>
         <button id="btn-nav-est" class="nav-btn" onclick="cambiarPestaña('estanteria')"><span>📚</span>Estantería</button>
     </nav>
-
     <script>
         let streamActual = null, animationFrameId = null, detectorDeCodigos = null, libroActual = {}, escaneando = false;
         let nivelActual = "estanterias", estanteriaSeleccionada = "", baldaSeleccionada = "";

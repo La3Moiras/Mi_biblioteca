@@ -344,37 +344,44 @@
             actualizarEstado("¡Libro cargado! Completa los campos.");
         }
 
-        function guardarLibroDefinitivo() {
+       function guardarLibroDefinitivo() {
             let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
             let estanteriaIn = document.getElementById('form-estanteria').value.trim() || "Sin estantería";
             let baldaIn = document.getElementById('form-balda').value.trim() || "General";
+            
             libroActual.titulo = document.getElementById('form-titulo').value.trim() || "Título Desconocido";
             libroActual.autores = document.getElementById('form-autor').value.trim() || "Autor Desconocido";
             libroActual.estanteria = estanteriaIn;
             libroActual.balda = baldaIn;
             libroActual.portada = document.getElementById('form-imagen').value.trim();
+
             let indiceExistente = biblioteca.findIndex(l => l.isbn === libroActual.isbn);
+
             if (indiceExistente !== -1) {
+                // Modo Edición
                 biblioteca[indiceExistente] = { ...libroActual };
+                localStorage.setItem('misLibros', JSON.stringify(biblioteca)); // Guardar inmediatamente
+                alert("¡Libro actualizado con éxito!");
                 actualizarEstado("Libro actualizado con éxito.");
-            } 
-            else {
-                if(!libroActual.isbn.startsWith("MANUAL-")) {
+            } else {
+                // Modo Alta Nueva
+                if (!libroActual.isbn.startsWith("MANUAL-")) {
                     let yaExiste = biblioteca.some(l => l.isbn === libroActual.isbn);
                     if (yaExiste) {
                         alert("¡Atención! Este libro ya está registrado.");
                         actualizarEstado("Duplicado detectado. Formulario limpiado.");
                         limpiarFormulario();
-                    return;
+                        return;
                     }
                 }
                 biblioteca.push({ ...libroActual });
+                localStorage.setItem('misLibros', JSON.stringify(biblioteca)); // Guardar inmediatamente
+                alert("¡Guardado con éxito en: " + estanteriaIn + " / " + baldaIn);
                 actualizarEstado("Libro añadido con éxito.");
             }
-            localStorage.setItem('misLibros', JSON.stringify(biblioteca));
-            alert("¡Guardado con éxito en: " + estanteriaIn + " / " + baldaIn);
+
+            // Limpiar todo al finalizar la acción correspondiente
             limpiarFormulario();
-            actualizarEstado("Libro añadido con éxito.");
         }
 
         function renderizarJerarquia() {

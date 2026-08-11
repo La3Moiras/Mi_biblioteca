@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mi Biblioteca v3.2.1</title>
-        <style>
+    <title>Mi Biblioteca v3.3.0</title>
+    <style>
         body {
-            background-image: url('https://images.unsplash.com/photo-1595232208179-d8cf4ca455fc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHNlYXJjaHwxfHxwYXBlbCUyMGFudGlndW98ZW58MHx8fHwxNzg2MjI1NTkzfDA&ixlib=rb-4.1.0&q=80&w=1080'); 
+            background-image: url('https://unsplash.com'); 
             background-size: cover; background-position: center;background-attachment: fixed;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             margin: 0;
             padding: 15px; padding-bottom: 90px;
-            text-align: center; color: #362213; /* Tono marrón tinta para mejorar la legibilidad sobre pergamino */
+            text-align: center; color: #362213; 
         }
         .container { max-width: 500px; margin: auto; padding: 10px; }
         .version-tag { font-size: 11px; color: #7e6f5c; margin-top: -10px; margin-bottom: 20px; font-weight: bold; letter-spacing: 1px; }
@@ -21,25 +21,17 @@
         video { width: 100%; height: auto; display: block; }
         .laser { position: absolute; top: 50%; left: 5%; width: 90%; height: 2px; background-color: #ff3333; box-shadow: 0 0 10px #ff3333; animation: laserAnim 2s infinite alternate; }
         @keyframes laserAnim { from { top: 35%; } to { top: 65%; } }
-
         /* Cajetín introducir libro manual (Cuero Oscuro Estilo Libro) */
         .card { 
             background: linear-gradient(180deg, #5c3a21 0%, #4a2e1b 100%); background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 0), linear-gradient(180deg, #5c3a21 0%, #4a2e1b 100%);
             background-size: 4px 4px, 100% 100%; outline: 2px dashed rgba(244, 234, 225, 0.6); outline-offset: -6px; 
-            padding: 24px; 
-            border-radius: 16px; 
-            margin-top: 20px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.35); 
-            text-align: left; 
+            padding: 24px; border-radius: 16px; margin-top: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.35); text-align: left; 
         }
- .card h2 {
-            color: #f4eae1; /* Color crema suave */
-            margin-top: 0;
-            margin-bottom: 15px;
-            font-size: 24px;
-	    font-weight: bold;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8); /* Sombra para simular grabado */
-            border-bottom: 2px dashed rgba(244, 234, 225, 0.3); /* Línea divisoria de costura */
+        .card h2 {
+            color: #f4eae1; margin-top: 0; margin-bottom: 15px;
+            font-size: 24px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); 
+            border-bottom: 2px dashed rgba(244, 234, 225, 0.3); 
             padding-bottom: 10px;
         }
         .card label { font-weight: 700; font-size: 16px; font-weight: bold; color: #f4eae1; display: block; margin-top: 14px; text-transform: uppercase; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); letter-spacing: 0.8px; }
@@ -47,6 +39,11 @@
         .card input:focus { border-color: #f4eae1; background: #eedfc2; outline: 1px dashed rgba(44, 34, 25, 0.6); outline-offset: -4px; }
         .card img { max-width: 120px; display: block; margin: 15px auto 0 auto; border-radius: 6px; box-shadow: 0 6px 15px rgba(0,0,0,0.4); }
         
+        /* Buscador integrado en la pestaña de estanterías */
+        .bloque-buscador { margin-bottom: 15px; text-align: left; }
+        .bloque-buscador label { font-size: 12px; font-weight: bold; color: #5a4b3e; text-transform: uppercase; letter-spacing: 0.5px; }
+        .bloque-buscador input { width: 100%; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(4px); padding: 12px; margin-top: 4px; border: 1px solid #c4b293; border-radius: 8px; box-sizing: border-box; font-size: 15px; color: #2b1a0e; font-weight: 600; }
+        .bloque-buscador input:focus { background: rgba(255, 255, 255, 0.9); border-color: #5c3a21; outline: none; }
         /* Botones de cuero generales */
         button { 
             background: linear-gradient(180deg, #5c3a21 0%, #4a2e1b 100%);
@@ -75,80 +72,59 @@
             background: linear-gradient(180deg, #3d2616 0%, #4a2e1b 100%);
             box-shadow: inset 0 3px 5px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.2);
         }
-
-        /* Cartel del ISBN estilo etiqueta pergamino */
+        /* Cartel del ISBN estilo etiqueta pergamino */     
         #isbn-bloque { background: #e8dabd; padding: 10px 28px; border-radius: 8px; font-weight: bold; color: #493323; margin: 15px auto; font-size: 14px; display: block; max-width: 220px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid #c4b293; outline: 1px dashed rgba(44, 34, 25, 0.5); outline-offset: -5px; }
         #info-estado { color: #5a4b3e; font-size: 13px; margin: 5px 0 15px 0; font-weight: 600; }
 
         .seccion { display: none; }
         .seccion.activa { display: block; }
-
         /* Carpetas y Estanterías estilo Madera Suave / Pergamino */
-        .lista-carpetas { margin-top: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .lista-carpetas { margin-top: 10px; display: flex; flex-direction: column; gap: 12px; }
         .item-carpeta { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(4px); padding: 18px; border-radius: 12px; box-shadow: 0 4px 12px rgba(44,34,25,0.08); text-align: left; font-weight: 700; font-size: 16px; color: #2b1a0e; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-left: 6px solid #5c3a21; transition: background 0.2s; }
         .item-carpeta:active { background: rgba(232, 218, 189, 0.9); }
         .item-carpeta span { font-size: 13px; color: #7e6f5c; font-weight: 600; }
-        
         /* Cuadrícula de libros integrados en el fondo */
-        .estanteria { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px; }
-        .item-libro { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(4px); padding: 14px; border-radius: 14px; box-shadow: 0 4px 12px rgba(44,34,25,0.08); text-align: left; position: relative; display: flex; flex-direction: column; justify-content: space-between; min-height: 210px; border: 1px solid rgba(210, 195, 165, 0.5); }
-        .item-libro img { max-width: 90px; display: block; margin: 0 auto 10px auto; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+        .estanteria { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 10px; }
+        .item-libro { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(4px); padding: 14px; border-radius: 14px; box-shadow: 0 4px 12px rgba(44,34,25,0.08); text-align: left; position: relative; display: flex; flex-direction: column; justify-content: space-between; min-height: 250px; border: 1px solid rgba(210, 195, 165, 0.5); }
+        .item-libro img { max-width: 90px; max-height: 130px; object-fit: cover; display: block; margin: 0 auto 10px auto; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
         .item-titulo { font-size: 14px; font-weight: 700; margin: 0; color: #2b1a0e; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; padding-right: 22px; }
         .item-autor { font-size: 12px; color: #5a4b3e; margin: 4px 0 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .item-ubicacion-tag { font-size: 10px; color: #8c7662; font-weight: bold; background: #eedfc2; padding: 2px 6px; border-radius: 4px; margin-top: 6px; display: inline-block; width: fit-content; text-transform: uppercase; }
         
         .btn-borrar { position: absolute; top: 12px; right: 12px; background: #fff5f5; border: 1px solid #fed7d7; color: #e53e3e; font-size: 12px; cursor: pointer; padding: 4px 6px; border-radius: 6px; font-weight: bold; width: auto; margin: 0; display: inline; z-index: 10; }
         .btn-borrar:active { background: #fed7d7; }
-
-       /* Barra de navegación inferior estilo Madera Oscura/Cuero */
-        .nav-bar { 
-            position: fixed; 
-            bottom: 0; 
-            left: 0; 
-            width: 100%; 
-            background: linear-gradient(180deg, #3d2616 0%, #2b1a0e 100%); 
-            border-top: 1px solid #1a1009; 
-            display: flex; 
-            justify-content: space-around; 
-            padding: 10px 0; 
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.3); 
-            z-index: 1000; 
-        }
-         .nav-btn { 
-            background: linear-gradient(180deg, #2d5a27 0%, #1e3f1a 100%); 
-            border: none; 
-            font-size: 13px; 
-            color: #a4c49e; /* Tono verde crema apagado para botones inactivos */
-            font-weight: 700; 
-            cursor: pointer; 
-            padding: 8px 12px; 
-            width: auto; 
-            margin: 0; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            gap: 4px; 
-            text-shadow: 1px 1px 1px rgba(0,0,0,0.6); 
-            border-radius: 6px;
-            transition: all 0.2s;
-        }
         
-        /* Pestaña activa: Letras crema fijas y costura interna simulada para resaltar */
-        .nav-btn.activo { 
-            color: #f4eae1; /* Color crema suave para el texto */
-            /* Se elimina el border-bottom blanco y se añade costura interna sutil */
-            outline: 1px dashed rgba(244, 234, 225, 0.4);
-            outline-offset: -3px;
- background: linear-gradient(180deg, #2d5a27 0%, #1e3f1a 100%);
+        .btn-editar { position: absolute; top: 12px; left: 12px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; font-size: 12px; cursor: pointer; padding: 4px 6px; border-radius: 6px; font-weight: bold; width: auto; margin: 0; display: inline; z-index: 10; }
+        .btn-editar:active { background: #bbf7d0; }
+        /* Barra de navegación inferior estilo Madera Oscura/Cuero */
+        .nav-bar { 
+            position: fixed; bottom: 0; left: 0; width: 100%; 
+            background: linear-gradient(180deg, #3d2616 0%, #2b1a0e 100%); 
+            border-top: 1px solid #1a1009; display: flex; 
+            justify-content: space-around; padding: 10px 0; box-shadow: 0 -4px 20px rgba(0,0,0,0.3); z-index: 1000; 
         }
+        .nav-btn { 
+            background: linear-gradient(180deg, #2d5a27 0%, #1e3f1a 100%); 
+            border: none; font-size: 13px; color: #a4c49e; font-weight: 700; 
+            cursor: pointer; padding: 8px 12px; width: auto; margin: 0; 
+            display: flex; flex-direction: column; align-items: center; 
+            gap: 4px; text-shadow: 1px 1px 1px rgba(0,0,0,0.6); 
+            border-radius: 6px; transition: all 0.2s;
+        }
+        .nav-btn.activo { 
+            color: #f4eae1; outline: 1px dashed rgba(244, 234, 225, 0.4); outline-offset: -3px;
+            background: linear-gradient(180deg, #2d5a27 0%, #1e3f1a 100%);
+        }
+        .btn-atras { margin-bottom: 10px; padding: 8px 16px; max-width: 120px; font-size: 14px; float: left; }
     </style>
 </head>
 <body>
     <div class="container">
         
         <!-- PESTAÑA 1: ESCÁNER -->
-        <div id="sec-escaner" class="seccion activa">
+          <div id="sec-escaner" class="seccion activa">
             <h1>Mi Biblioteca</h1>
-            <div class="version-tag">APP ENGINE v3.2.1</div>
+            <div class="version-tag">APP ENGINE v3.3.0</div>
             
             <button id="btn-iniciar" onclick="comenzarEscaneoEnVivo()">📷 Iniciar Escáner en Vivo</button>
             <button id="btn-manual-toggle" onclick="abrirFormularioManual()" style="background: linear-gradient(180deg, #2d5a27 0%, #1e3f1a 100%); margin-top:0; box-shadow: 0 6px 12px rgba(0,0,0,0.25);">📝 Adición Manual</button>
@@ -161,22 +137,27 @@
             <div id="isbn-bloque">ISBN: <span id="num-isbn">Ninguno</span></div>
             <div id="info-estado">Estado: En espera...</div>
 
-            <div id="resultado" class="card">
+            <div id="resultado" class="card" style="display:none;">
                 <h2>Ficha del Libro</h2>
                 <label>Título del libro:</label><input type="text" id="form-titulo">
                 <label>Autor / Escritor:</label><input type="text" id="form-autor">
                 <label>Estantería / Habitación:</label><input type="text" id="form-estanteria" placeholder="Ej: Salón, Estudio...">
                 <label>Balda / Estante:</label><input type="text" id="form-balda" placeholder="Ej: Balda 1, Superior...">
+                <label>Enlace / Ruta de Portada:</label><input type="text" id="form-imagen" placeholder="URL web o ruta local (ej: img/libro.png)">
                 <img id="libro-portada" src="" alt="Portada" style="display:none;">
-                <button onclick="guardarLibroDefinitivo()" style="background: linear-gradient(180deg, #2d5a27 0%, #1e3f1a 100%);outline: 2px dashed rgba(244, 234, 225, 0.6);
-            outline-offset: -6px;; max-width: 100%; margin-top:20px; box-shadow: 0 6px 12px rgba(0,0,0,0.25);">💾 Guardar Libro</button>
+                <button onclick="guardarLibroDefinitivo()" style="background: linear-gradient(180deg, #2d5a27 0%, #1e3f1a 100%); outline: 2px dashed rgba(244, 234, 225, 0.6); outline-offset: -6px; max-width: 100%; margin-top:20px; box-shadow: 0 6px 12px rgba(0,0,0,0.25);">💾 Guardar Libro</button>
             </div>
         </div>
 
-        <!-- PESTAÑA 2: ESTANTERÍA -->
         <div id="sec-estanteria" class="seccion">
             <h1 id="titulo-navegacion">Mis Estanterías</h1>
             <div class="version-tag">ORGANIZACIÓN ESTRUCTURAL</div>
+            
+            <div id="contenedor-buscador" class="bloque-buscador">
+                <label for="input-busqueda">🔍 Buscar Libro (Título / Autor):</label>
+                <input type="text" id="input-busqueda" oninput="ejecutarBusquedaLibros()" placeholder="Escribe para buscar en toda la biblioteca...">
+            </div>
+
             <button id="btn-volver-rutas" class="btn-atras" onclick="volverAtrasJerarquia()" style="display:none;">⬅ Volver</button>
             <div style="clear:both;"></div>
             <div id="lista-vacia" style="color: #a0aec0; margin-top: 40px; font-weight: 500;">Tu estantería está vacía. ¡Añade tu primer libro!</div>
@@ -190,12 +171,14 @@
         <button id="btn-nav-esc" class="nav-btn activo" onclick="cambiarPestaña('escaner')"><span>📷</span>Escáner</button>
         <button id="btn-nav-est" class="nav-btn" onclick="cambiarPestaña('estanteria')"><span>📚</span>Estantería</button>
     </nav>
+
     <script>
         let streamActual = null, animationFrameId = null, detectorDeCodigos = null, libroActual = {}, escaneando = false;
         let nivelActual = "estanterias", estanteriaSeleccionada = "", baldaSeleccionada = "";
-
-        function actualizarEstado(txt) { 
-            document.getElementById('info-estado').innerText = "Acción: " + txt; 
+        const IMAGEN_GENERICA = "https://unsplash.com";
+ 
+        function actualizarEstado(txt) {
+            document.getElementById('info-estado').innerText = "Acción: " + txt;
         }
 
         function cambiarPestaña(pestaña) {
@@ -205,10 +188,13 @@
             if (pestaña === 'escaner') {
                 document.getElementById('sec-escaner').classList.add('activa');
                 document.getElementById('btn-nav-esc').classList.add('activo');
-            } else {
+            } 
+            else {
                 document.getElementById('sec-estanteria').classList.add('activa');
                 document.getElementById('btn-nav-est').classList.add('activo');
-                nivelActual = "estanterias"; 
+                document.getElementById('input-busqueda').value = ""; // Limpiar buscador al entrar
+                document.getElementById('contenedor-buscador').style.display = "block";
+                nivelActual = "estanterias";
                 renderizarJerarquia();
             }
         }
@@ -220,20 +206,22 @@
             document.getElementById('form-autor').value = "";
             document.getElementById('form-estanteria').value = "";
             document.getElementById('form-balda').value = "";
+            document.getElementById('form-imagen').value = "";
             document.getElementById('libro-portada').style.display = 'none';
+            libroActual = {};
         }
-
+    
         function abrirFormularioManual() {
-            detenerCamara(); 
+            detenerCamara();
             limpiarFormulario();
             document.getElementById('resultado').style.display = 'block';
             document.getElementById('num-isbn').innerText = "Manual";
-            libroActual = { isbn: "MANUAL-" + Date.now(), portada: "https://placeholder.com" };
+            libroActual = { isbn: "MANUAL-" + Date.now(), portada: "" };
             actualizarEstado("Formulario manual abierto.");
         }
 
         async function comenzarEscaneoEnVivo() {
-            if (!('BarcodeDetector' in window)) { 
+            if (!('BarcodeDetector' in window)) {
                 actualizarEstado("Navegador incompatible.");
                 return;
             }
@@ -248,13 +236,13 @@
                 document.getElementById('video-container').style.display = 'block';
                 actualizarEstado("Enfoca el código de barras...");
                 escaneando = true;
-                document.getElementById('webcam').onloadedmetadata = () => { 
-                    procesarFrameEnVivo(); 
+                document.getElementById('webcam').onloadedmetadata = () => {    
+                    procesarFrameEnVivo();
                 };
-            } 
-            catch (err) { 
-                actualizarEstado("Error de cámara."); 
-                document.getElementById('btn-iniciar').style.display = 'block'; 
+            }
+            catch (err) {
+                actualizarEstado("Error de cámara.");
+                document.getElementById('btn-iniciar').style.display = 'block';
             }
         }
 
@@ -262,17 +250,17 @@
             if (!escaneando || !detectorDeCodigos) return;
             detectorDeCodigos.detect(document.getElementById('webcam')).then(barcodes => {
                 if (barcodes && barcodes.length > 0 && escaneando) {
-                    escaneando = false; 
+                    escaneando = false;
                     const isbnOriginal = barcodes[0].rawValue;
-                    detectorDeCodigos = null; 
+                    detectorDeCodigos = null;
                     detenerCamara();
                     const isbnLimpio = isbnOriginal.trim().replace(/[^0-9X]/gi, "");
                     document.getElementById('num-isbn').innerText = isbnLimpio;
                     actualizarEstado("Buscando en Google Books...");
                     setTimeout(() => { buscarLibroDobleMotor(isbnLimpio); }, 100);
-                } 
-                else { 
-                    if (escaneando) animationFrameId = requestAnimationFrame(procesarFrameEnVivo); 
+                }
+                else {
+                        if (escaneando) animationFrameId = requestAnimationFrame(procesarFrameEnVivo);
                     }
             }).catch(() => { if (escaneando) animationFrameId = requestAnimationFrame(procesarFrameEnVivo); });
         }
@@ -286,32 +274,29 @@
 
         // SISTEMA DE DOBLE MOTOR DE BÚSQUEDA CORREGIDO
         async function buscarLibroDobleMotor(isbn) {
-        // Mantén tu clave aquí, pero recuerda restringirla en la consola de Google Cloud por HTTP Referrer si publicas la web
+        // Mantén tu clave aquí, pero recuerda restringirla en la consola de Google Cloud por HTTP Referrer si publicas la web   
             const urlGoogle = "https://www.googleapis.com/books/v1/volumes?q=isbn:" + isbn + "&key=AIzaSyAI3ZbntVgR9XRAB4dQk2Qa_t8KAbHGbck";
             try {
                 const response = await fetch(urlGoogle);
                 const data = await response.json();
-
-                // Si data tiene un error de cuota (como el 429), esto vendrá vacío y saltará automáticamente al rescate
+                // Si data tiene un error de cuota (como el 429),
                 if (data && data.totalItems > 0 && data.items && data.items.length > 0) {
-                    // CORRECCIÓN: Se añade el índice [0] porque items es un array de resultados
                     const info = data.items[0].volumeInfo;
                     let autor = info.authors ? info.authors.join(', ') : 'Autor desconocido';
-                    let portada = 'https://placeholder.com';
+                    let portada = '';
                     if (info.imageLinks) {
                         let linkFoto = info.imageLinks.thumbnail || info.imageLinks.smallThumbnail;
                         if (linkFoto) portada = linkFoto.replace('http://', 'https://');
                     }
                     pintarFichaLibro(isbn, info.title || "", autor, portada);
-                } 
+                }
                 else {
-                    // actualizarEstadoSi el JSON viene vacío o trae el error de cuota 429, saltamos al rescate
-                     actualizarEstado("Google Books no devolvió resultados o superó la cuota. Probando Open Library...");
+                    actualizarEstado("Google Books sin resultados. Probando Open Library...");
                     buscarEnOpenLibraryRescate(isbn);
                 }
-            } 
+            }
             catch (error) {
-                actualizarEstado("Fallo de red en Google Books, probando rescate...");
+                actualizarEstado("Fallo en Google Books, probando rescate...");
                 buscarEnOpenLibraryRescate(isbn);
             }
         }
@@ -319,32 +304,28 @@
         async function buscarEnOpenLibraryRescate(isbn) {
             actualizarEstado("Buscando en Open Library...");
             const urlOL = "https://openlibrary.org:" + isbn + "&jscmd=data&format=json";
-
             try {
                 const response = await fetch(urlOL);
                 const data = await response.json();
-        
-                // CORRECCIÓN SINTÁCTICA: Se usan comillas invertidas obligatorias para leer la clave dinámica de Open Library
-                const claveLibro = `ISBN:${isbn}`;      
+                const claveLibro = `ISBN:${isbn}`;
                 if (data && data[claveLibro]) {
                     const infoOL = data[claveLibro];
                     let autorOL = infoOL.authors ? infoOL.authors.map(a => a.name).join(', ') : 'Autor desconocido';
-                     let portadaOL = 'https://placeholder.com';
+                    let portadaOL = '';
                     if (infoOL.cover && infoOL.cover.medium) {
                         portadaOL = infoOL.cover.medium.replace('http://', 'https://');
                     }
                     pintarFichaLibro(isbn, infoOL.title || "", autorOL, portadaOL);
-                } 
+                }
                 else {
-                    // Si tampoco existe en Open Library
                     actualizarEstado("No encontrado. Introduce los datos manualmente.");
-                    abrirFormularioManual(); 
+                    brirFormularioManual();
                     document.getElementById('num-isbn').innerText = isbn;
                     libroActual.isbn = isbn;
                 }
-            } 
+            }
             catch (error) {
-                actualizarEstado("Fallo general de red en Open Library. Entrando a modo manual.");
+                actualizarEstado("Fallo de red en Open Library. Entrando a modo manual.");
                 abrirFormularioManual();
             }
         }
@@ -355,8 +336,10 @@
             document.getElementById('form-autor').value = autor;
             document.getElementById('form-estanteria').value = "";
             document.getElementById('form-balda').value = "";
-            document.getElementById('libro-portada').src = portada;
-            document.getElementById('libro-portada').style.display = 'block';
+            document.getElementById('form-imagen').value = portada;
+            const imgPreview = document.getElementById('libro-portada');
+            imgPreview.src = portada || IMAGEN_GENERICA;
+            imgPreview.style.display = 'block';
             document.getElementById('resultado').style.display = 'block';
             actualizarEstado("¡Libro cargado! Completa los campos.");
         }
@@ -369,43 +352,57 @@
             libroActual.autores = document.getElementById('form-autor').value.trim() || "Autor Desconocido";
             libroActual.estanteria = estanteriaIn;
             libroActual.balda = baldaIn;
-            // Filtro anti-duplicados (solo si no es alta manual pura sin ISBN)
-            if(!libroActual.isbn.startsWith("MANUAL-")) {
-                let yaExiste = biblioteca.some(l => l.isbn === libroActual.isbn);
-                if (yaExiste) {
-                    alert("¡Atención! Este libro ya está registrado.");
-                    actualizarEstado("Duplicado detectado. Formulario limpiado.");
-                    limpiarFormulario();
+            libroActual.portada = document.getElementById('form-imagen').value.trim();
+            let indiceExistente = biblioteca.findIndex(l => l.isbn === libroActual.isbn);
+            if (indiceExistente !== -1) {
+                biblioteca[indiceExistente] = { ...libroActual };
+                actualizarEstado("Libro actualizado con éxito.");
+            } 
+            else {
+                if(!libroActual.isbn.startsWith("MANUAL-")) {
+                    let yaExiste = biblioteca.some(l => l.isbn === libroActual.isbn);
+                    if (yaExiste) {
+                        alert("¡Atención! Este libro ya está registrado.");
+                        actualizarEstado("Duplicado detectado. Formulario limpiado.");
+                        limpiarFormulario();
                     return;
+                    }
                 }
+                biblioteca.push({ ...libroActual });
+                actualizarEstado("Libro añadido con éxito.");
             }
-            biblioteca.push(libroActual);
             localStorage.setItem('misLibros', JSON.stringify(biblioteca));
-            alert("¡Guardado en: " + estanteriaIn + " / " + baldaIn);
+            alert("¡Guardado con éxito en: " + estanteriaIn + " / " + baldaIn);
             limpiarFormulario();
             actualizarEstado("Libro añadido con éxito.");
         }
 
         function renderizarJerarquia() {
-            const divCarpetas = document.getElementById('bloque-jerarquia'); 
+            const divCarpetas = document.getElementById('bloque-jerarquia');
             const contenedorLibros = document.getElementById('contenedor-estanteria');
-            const btnVolver = document.getElementById('btn-volver-rutas'); 
+            const btnVolver = document.getElementById('btn-volver-rutas');
             const txtTitulo = document.getElementById('titulo-navegacion');
             const txtVacio = document.getElementById('lista-vacia');
             let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
-            divCarpetas.innerHTML = ""; 
+            divCarpetas.innerHTML = "";
             contenedorLibros.innerHTML = "";
-            if (biblioteca.length === 0) { 
+            if (biblioteca.length === 0) {                
                 txtVacio.style.display = "block";
-                btnVolver.style.display = "none"; 
-                return; 
+                btnVolver.style.display = "none";
+                document.getElementById('contenedor-buscador').style.display = "none";
+                return;
             }
             txtVacio.style.display = "none";
+            document.getElementById('contenedor-buscador').style.display = "block";
+            // Si el buscador tiene texto escrito, congela la jerarquía y muestra los resultados filtrados
+            if (document.getElementById('input-busqueda').value.trim() !== "") {
+                 ejecutarBusquedaLibros();
+                return;
+            }
             // NIVEL 1: MOSTRAR MUEBLES / ESTANTERÍAS
             if (nivelActual === "estanterias") {
                 txtTitulo.innerText = "Mis Estanterías";
                 btnVolver.style.display = "none";
-                // Extraer nombres únicos de estanterías
                 let estanteriasUnicas = [...new Set(biblioteca.map(l => l.estanteria))];
                 estanteriasUnicas.forEach(est => {
                     let totalEnEst = biblioteca.filter(l => l.estanteria === est).length;
@@ -419,7 +416,7 @@
                     };
                     divCarpetas.appendChild(div);
                 });
-            } 
+            }
             // NIVEL 2: MOSTRAR BALDAS DE UNA ESTANTERÍA
             else if (nivelActual === "baldas") {
                 txtTitulo.innerText = "Estantería: " + estanteriaSeleccionada;
@@ -433,36 +430,93 @@
                     div.style.borderColor = "#28a745";
                     div.innerHTML = `📚 ${bal} <span>(${totalEnBal} uds) ➔</span>`;
                     div.onclick = () => {
-                        baldaSeleccionada = bal;
+                        baldaSeleccionada = bal
                         nivelActual = "libros";
                         renderizarJerarquia();
                     };
                     divCarpetas.appendChild(div);
                 });
             }
-            // NIVEL 3: CUADRÍCULA DE LIBROS CON PORTADAS Y BORRADO
+            // NIVEL 3: CUADRÍCULA DE LIBROS CON PORTADAS, BORRADO Y EDICIÓN
             else if (nivelActual === "libros") {
                 txtTitulo.innerText = estanteriaSeleccionada + " ➔ " + baldaSeleccionada;
                 btnVolver.style.display = "block";
                 let librosFiltrados = biblioteca.filter(l => l.estanteria === estanteriaSeleccionada && l.balda === baldaSeleccionada);
-                // Si la balda se queda vacía porque borramos el último libro, volvemos atrás automáticamente
                 if (librosFiltrados.length === 0) {
                     nivelActual = "baldas";
                     renderizarJerarquia();
                     return;
                 }
-                librosFiltrados.forEach(libro => {
-                    let div = document.createElement('div');
-                    div.className = 'item-libro';
-                    div.innerHTML =` 
-                    <img src="${libro.portada}" alt="Portada">
-                    <p class="item-titulo">${libro.titulo}</p> 
-                    <p class="item-autor">${libro.autores}</p> 
-                    <button class="btn-borrar" onclick="eliminarLibroDeEstanteria(event, '${libro.isbn}', '${libro.titulo}')">❌ Borrar</button>
-                    `;
-                    contenedorLibros.appendChild(div);
-                });
+            librosFiltrados.forEach(libro => {
+                let div = document.createElement('div');
+                div.className = 'item-libro';
+                let srcImagen = libro.portada || IMAGEN_GENERICA;
+                div.innerHTML =`  
+                <img src="${srcImagen}" alt="Portada"> 
+                <p class="item-titulo">${libro.titulo}</p>  <p class="item-autor">${libro.autores}</p>  
+                <button class="btn-editar" onclick="activarModoEdicion(event, '${libro.isbn}')">✏️ Editar</button> 
+                <button class="btn-borrar" onclick="eliminarLibroDeEstanteria(event, '${libro.isbn}', '${libro.titulo}')">❌ Borrar</button>
+                `;
+                contenedorLibros.appendChild(div);
+            });
+        }
+    }
+
+        // Nueva lógica de motor de búsqueda global en tiempo real
+        function ejecutarBusquedaLibros() {
+            let termino = document.getElementById('input-busqueda').value.toLowerCase().trim();
+            const divCarpetas = document.getElementById('bloque-jerarquia');
+            const contenedorLibros = document.getElementById('contenedor-estanteria');
+            const btnVolver = document.getElementById('btn-volver-rutas');
+            const txtTitulo = document.getElementById('titulo-navegacion');
+            // Si el buscador está vacío, volvemos a la vista clásica estructurada
+            if (termino === "") {
+                renderizarJerarquia();
+                return;
             }
+            // Forzar ocultación de carpetas y botón volver para evitar conflictos visuales
+            divCarpetas.innerHTML = "";
+            contenedorLibros.innerHTML = "";
+            btnVolver.style.display = "none";
+            txtTitulo.innerText = "Resultados de búsqueda";
+            let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
+            // Filtrado cruzado por título o por autor
+            let resultados = biblioteca.filter(l =>l.titulo.toLowerCase().includes(termino) ||l.autores.toLowerCase().includes(termino));
+            if (resultados.length === 0) {
+                contenedorLibros.innerHTML = <div style="grid-column: span 2; color: #7e6f5c; padding: 20px; font-weight: bold;">Ningún libro coincide con la búsqueda.</div>;
+                return;
+            }
+            resultados.forEach(libro => {
+                let div = document.createElement('div');
+                div.className = 'item-libro';
+                let srcImagen = libro.portada || IMAGEN_GENERICA;div.innerHTML =`   <img src="${srcImagen}" alt="Portada">
+                <p class="item-titulo">${libro.titulo}</p>  
+                <p class="item-autor">${libro.autores}</p>  
+                <span class="item-ubicacion-tag">📍 ${libro.estanteria}</span> 
+                <button class="btn-editar" onclick="activarModoEdicion(event, '${libro.isbn}')">✏️ Editar</button> 
+                <button class="btn-borrar" onclick="eliminarLibroDeEstanteria(event, '${libro.isbn}', '${libro.titulo}')">❌ Borrar</button>
+                `;
+                contenedorLibros.appendChild(div);
+            } );
+        }
+        
+        function activarModoEdicion(event, isbn) {event.stopPropagation();
+            let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
+            let libro = biblioteca.find(l => l.isbn === isbn);
+            if (!libro) return;
+            cambiarPestaña('escaner');
+            libroActual = { ...libro };
+            document.getElementById('num-isbn').innerText = libro.isbn;
+            document.getElementById('form-titulo').value = libro.titulo;
+            document.getElementById('form-autor').value = libro.autores;
+            document.getElementById('form-estanteria').value = libro.estanteria;
+            document.getElementById('form-balda').value = libro.balda;
+            document.getElementById('form-imagen').value = libro.portada || "";
+            const imgPreview = document.getElementById('libro-portada');
+            imgPreview.src = libro.portada || IMAGEN_GENERICA;
+            imgPreview.style.display = 'block';
+            document.getElementById('resultado').style.display = 'block';
+            actualizarEstado("Editando: " + libro.titulo);
         }
 
         function volverAtrasJerarquia() {
@@ -479,13 +533,17 @@
             event.stopPropagation();
             if (confirm("¿Estás seguro de que quieres eliminar '" + titulo + "' de esta balda?")) {
                 let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
-                // Filtrar para borrar solo el libro con ese ISBN exacto
                 biblioteca = biblioteca.filter(libro => libro.isbn !== isbn);
                 localStorage.setItem('misLibros', JSON.stringify(biblioteca));
-                // Recargar la pantalla actual para refrescar los cambios
-                renderizarJerarquia();
+                // Si estábamos buscando, refresca los resultados de la búsqueda actual
+                    if (document.getElementById('input-busqueda').value.trim() !== "") {
+                        ejecutarBusquedaLibros();
+                    } 
+                    else {
+                        renderizarJerarquia();
+                    }
             }
         }
-    </script>
+  </script>
 </body>
 </html>

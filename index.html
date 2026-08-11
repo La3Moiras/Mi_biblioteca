@@ -303,7 +303,7 @@
 
         async function buscarEnOpenLibraryRescate(isbn) {
             actualizarEstado("Buscando en Open Library...");
-            const urlOL = "https://openlibrary.org:" + isbn + "&jscmd=data&format=json";
+            const urlOL = "https://openlibrary.org/api/books?bibkeys=ISBN:" + isbn + "&jscmd=data&format=json";
             try {
                 const response = await fetch(urlOL);
                 const data = await response.json();

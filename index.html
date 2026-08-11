@@ -378,27 +378,30 @@
         }
 
         function renderizarJerarquia() {
-            const divCarpetas = document.getElementById('bloque-jerarquia');
+            const divCarpetas = document.getElementById('bloque-jerarquia'); 
             const contenedorLibros = document.getElementById('contenedor-estanteria');
-            const btnVolver = document.getElementById('btn-volver-rutas');
+            const btnVolver = document.getElementById('btn-volver-rutas'); 
             const txtTitulo = document.getElementById('titulo-navegacion');
             const txtVacio = document.getElementById('lista-vacia');
             let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
-            divCarpetas.innerHTML = "";
+            
+            divCarpetas.innerHTML = ""; 
             contenedorLibros.innerHTML = "";
-            if (biblioteca.length === 0) {                
+            
+            if (biblioteca.length === 0) { 
                 txtVacio.style.display = "block";
-                btnVolver.style.display = "none";
+                btnVolver.style.display = "none"; 
                 document.getElementById('contenedor-buscador').style.display = "none";
-                return;
+                return; 
             }
             txtVacio.style.display = "none";
             document.getElementById('contenedor-buscador').style.display = "block";
-            // Si el buscador tiene texto escrito, congela la jerarquía y muestra los resultados filtrados
+
             if (document.getElementById('input-busqueda').value.trim() !== "") {
-                 ejecutarBusquedaLibros();
+                ejecutarBusquedaLibros();
                 return;
             }
+
             // NIVEL 1: MOSTRAR MUEBLES / ESTANTERÍAS
             if (nivelActual === "estanterias") {
                 txtTitulo.innerText = "Mis Estanterías";
@@ -416,7 +419,7 @@
                     };
                     divCarpetas.appendChild(div);
                 });
-            }
+            } 
             // NIVEL 2: MOSTRAR BALDAS DE UNA ESTANTERÍA
             else if (nivelActual === "baldas") {
                 txtTitulo.innerText = "Estantería: " + estanteriaSeleccionada;
@@ -430,7 +433,7 @@
                     div.style.borderColor = "#28a745";
                     div.innerHTML = `📚 ${bal} <span>(${totalEnBal} uds) ➔</span>`;
                     div.onclick = () => {
-                        baldaSeleccionada = bal
+                        baldaSeleccionada = bal; // CORREGIDO: Añadido punto y coma
                         nivelActual = "libros";
                         renderizarJerarquia();
                     };
@@ -442,25 +445,29 @@
                 txtTitulo.innerText = estanteriaSeleccionada + " ➔ " + baldaSeleccionada;
                 btnVolver.style.display = "block";
                 let librosFiltrados = biblioteca.filter(l => l.estanteria === estanteriaSeleccionada && l.balda === baldaSeleccionada);
+                
                 if (librosFiltrados.length === 0) {
                     nivelActual = "baldas";
                     renderizarJerarquia();
                     return;
                 }
-            librosFiltrados.forEach(libro => {
-                let div = document.createElement('div');
-                div.className = 'item-libro';
-                let srcImagen = libro.portada || IMAGEN_GENERICA;
-                div.innerHTML =`  
-                <img src="${srcImagen}" alt="Portada"> 
-                <p class="item-titulo">${libro.titulo}</p>  <p class="item-autor">${libro.autores}</p>  
-                <button class="btn-editar" onclick="activarModoEdicion(event, '${libro.isbn}')">✏️ Editar</button> 
-                <button class="btn-borrar" onclick="eliminarLibroDeEstanteria(event, '${libro.isbn}', '${libro.titulo}')">❌ Borrar</button>
-                `;
-                contenedorLibros.appendChild(div);
-            });
+                librosFiltrados.forEach(libro => {
+                    let div = document.createElement('div');
+                    div.className = 'item-libro';
+                    let srcImagen = libro.portada || IMAGEN_GENERICA;
+
+                    // CORREGIDO: Comilla invertida alineada y limpia sin espacios fantasmas
+                    div.innerHTML = ` 
+                        <img src="${srcImagen}" alt="Portada"> 
+                        <p class="item-titulo">${libro.titulo}</p>
+                        <p class="item-autor">${libro.autores}</p> 
+                        <button class="btn-editar" onclick="activarModoEdicion(event, '${libro.isbn}')">✏️ Editar</button> 
+                        <button class="btn-borrar" onclick="eliminarLibroDeEstanteria(event, '${libro.isbn}', '${libro.titulo}')">❌ Borrar</button>
+                    `;
+                    contenedorLibros.appendChild(div);
+                });
+            }
         }
-    }
 
         // Nueva lógica de motor de búsqueda global en tiempo real
        function ejecutarBusquedaLibros() {

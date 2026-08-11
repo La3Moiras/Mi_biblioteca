@@ -463,41 +463,51 @@
     }
 
         // Nueva lógica de motor de búsqueda global en tiempo real
-        function ejecutarBusquedaLibros() {
+       function ejecutarBusquedaLibros() {
             let termino = document.getElementById('input-busqueda').value.toLowerCase().trim();
             const divCarpetas = document.getElementById('bloque-jerarquia');
             const contenedorLibros = document.getElementById('contenedor-estanteria');
             const btnVolver = document.getElementById('btn-volver-rutas');
             const txtTitulo = document.getElementById('titulo-navegacion');
-            // Si el buscador está vacío, volvemos a la vista clásica estructurada
+            
             if (termino === "") {
                 renderizarJerarquia();
                 return;
             }
-            // Forzar ocultación de carpetas y botón volver para evitar conflictos visuales
+            
             divCarpetas.innerHTML = "";
             contenedorLibros.innerHTML = "";
             btnVolver.style.display = "none";
             txtTitulo.innerText = "Resultados de búsqueda";
+            
             let biblioteca = JSON.parse(localStorage.getItem('misLibros')) || [];
-            // Filtrado cruzado por título o por autor
-            let resultados = biblioteca.filter(l =>l.titulo.toLowerCase().includes(termino) ||l.autores.toLowerCase().includes(termino));
+            
+            let resultados = biblioteca.filter(l => 
+                l.titulo.toLowerCase().includes(termino) || 
+                l.autores.toLowerCase().includes(termino)
+            );
+            
             if (resultados.length === 0) {
-                contenedorLibros.innerHTML = <div style="grid-column: span 2; color: #7e6f5c; padding: 20px; font-weight: bold;">Ningún libro coincide con la búsqueda.</div>;
+                // CORREGIDO: Ahora el HTML está correctamente envuelto en comillas invertidas
+                contenedorLibros.innerHTML = `<div style="grid-column: span 2; color: #7e6f5c; padding: 20px; font-weight: bold;">Ningún libro coincide con la búsqueda.</div>`;
                 return;
             }
+            
             resultados.forEach(libro => {
                 let div = document.createElement('div');
                 div.className = 'item-libro';
-                let srcImagen = libro.portada || IMAGEN_GENERICA;div.innerHTML =`   <img src="${srcImagen}" alt="Portada">
-                <p class="item-titulo">${libro.titulo}</p>  
-                <p class="item-autor">${libro.autores}</p>  
-                <span class="item-ubicacion-tag">📍 ${libro.estanteria}</span> 
-                <button class="btn-editar" onclick="activarModoEdicion(event, '${libro.isbn}')">✏️ Editar</button> 
-                <button class="btn-borrar" onclick="eliminarLibroDeEstanteria(event, '${libro.isbn}', '${libro.titulo}')">❌ Borrar</button>
+                let srcImagen = libro.portada || IMAGEN_GENERICA;
+                
+                div.innerHTML = `
+                    <img src="${srcImagen}" alt="Portada">
+                    <p class="item-titulo">${libro.titulo}</p>  
+                    <p class="item-autor">${libro.autores}</p>  
+                    <span class="item-ubicacion-tag">📍 ${libro.estanteria}</span> 
+                    <button class="btn-editar" onclick="activarModoEdicion(event, '${libro.isbn}')">✏️ Editar</button> 
+                    <button class="btn-borrar" onclick="eliminarLibroDeEstanteria(event, '${libro.isbn}', '${libro.titulo}')">❌ Borrar</button>
                 `;
                 contenedorLibros.appendChild(div);
-            } );
+            });
         }
         
         function activarModoEdicion(event, isbn) {event.stopPropagation();

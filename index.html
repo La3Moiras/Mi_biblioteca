@@ -91,10 +91,10 @@
         .item-autor { font-size: 12px; color: #f4eae1; margin: 4px 0 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .item-ubicacion-tag { font-size: 10px; color: #f4eae1; font-weight: bold; background: #eedfc2; padding: 2px 6px; border-radius: 4px; margin-top: 6px; display: inline-block; width: fit-content; text-transform: uppercase; }
         
-        .btn-borrar { position: absolute; top: 9px; right: 12px; background: linear-gradient(180deg, #2d5a27 0%, #1e3f1a 100%);; border: 1px solid #fed7d7; color: #f4eae1; font-size: 11px; cursor: pointer; padding: 4px 6px; border-radius: 6px; font-weight: bold; width: auto; margin: 0; display: inline; z-index: 10; }
+                .btn-borrar { position: absolute; top: 5px; right: 5px; background: linear-gradient(180deg, #2d5a27 0%, #1e3f1a 100%);; border: 1px solid #fed7d7; color: #f4eae1; font-size: 11px; cursor: pointer; padding: 4px 6px; border-radius: 6px; font-weight: bold; width: auto; margin: 0; display: inline; z-index: 10; }
         .btn-borrar:active {transform: scale(0.96);  background: linear-gradient(180deg, #295822 0%, #173514 100%); }
         
-        .btn-editar { position: absolute; top: 12px; left: 12px; background: linear-gradient(180deg, #2d5a27 0%, #1e3f1a 100%); border: 1px solid #bbf7d0; color:#f4eae1; font-size: 11px; cursor: pointer; padding: 4px 6px; border-radius: 6px; font-weight: bold; width: auto; margin: 0; display: inline; z-index: 10; }
+        .btn-editar { position: absolute; top: 5px; left: 5px; background: linear-gradient(180deg, #2d5a27 0%, #1e3f1a 100%); border: 1px solid #bbf7d0; color:#f4eae1; font-size: 11px; cursor: pointer; padding: 4px 6px; border-radius: 6px; font-weight: bold; width: auto; margin: 0; display: inline; z-index: 10; }
         .btn-editar:active {transform: scale(0.96);background: linear-gradient(180deg, #295822 0%, #173514 100%); }
         /* Barra de navegación inferior estilo Madera Oscura/Cuero */
         .nav-bar { 
@@ -175,7 +175,8 @@
     <script>
         let streamActual = null, animationFrameId = null, detectorDeCodigos = null, libroActual = {}, escaneando = false;
         let nivelActual = "estanterias", estanteriaSeleccionada = "", baldaSeleccionada = "";
-        const IMAGEN_GENERICA = "https://unsplash.com";
+        const IMAGEN_GENERICA = "https://images.unsplash.com/photo-1755541608176-c7195962b094?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHNlYXJjaHwxOHx8cG9ydGFkYSUyMGRlJTIwbGlicm8lMjBhbnRpZ3VvfGVufDB8fHx8MTc4NjY0MjM3MXww&ixlib=rb-4.1.0&q=80&w=400";
+ 
  
         function actualizarEstado(txt) {
             document.getElementById('info-estado').innerText = "Acción: " + txt;

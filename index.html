@@ -86,15 +86,15 @@
         /* Cuadrícula de libros integrados en el fondo */
         .estanteria { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 10px; }
         .item-libro {  background: linear-gradient(180deg, #5c3a21 0%, #4a2e1b 100%);border: 1px solid #362213; outline: 1px dashed rgba(244, 234, 225, 0.6); backdrop-filter: blur(4px); padding: 14px; border-radius: 14px; box-shadow: 0 4px 12px rgba(44,34,25,0.08); text-align: left; position: relative; display: flex; flex-direction: column; justify-content: space-between; min-height: 250px; border: 1px solid rgba(210, 195, 165, 0.5); }
-        .item-libro img { max-width: 90px; max-height: 130px; object-fit: cover; display: block; margin: 0 auto 10px auto; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+        .item-libro img { max-width: 90px; max-height: 130px; object-fit: cover; display: block; margin: 25px auto 10px auto; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
         .item-titulo { font-size: 14px; font-weight: 700; margin: 0; color: #f4eae1; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; padding-right: 22px; }
         .item-autor { font-size: 12px; color: #f4eae1; margin: 4px 0 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .item-ubicacion-tag { font-size: 10px; color: #f4eae1; font-weight: bold; background: #eedfc2; padding: 2px 6px; border-radius: 4px; margin-top: 6px; display: inline-block; width: fit-content; text-transform: uppercase; }
         
-                .btn-borrar { position: absolute; top: 5px; right: 5px; background: linear-gradient(180deg, #2d5a27 0%, #1e3f1a 100%);; border: 1px solid #fed7d7; color: #f4eae1; font-size: 11px; cursor: pointer; padding: 4px 6px; border-radius: 6px; font-weight: bold; width: auto; margin: 0; display: inline; z-index: 10; }
+        .btn-borrar { position: absolute; top: 5px; right: 5px; background: linear-gradient(180deg, #2d5a27 0%, #1e3f1a 100%); color: #f4eae1; font-size: 11px; cursor: pointer; padding: 4px 6px; border-radius: 6px; font-weight: bold; width: auto; margin: 0; display: inline; z-index: 10; }
         .btn-borrar:active {transform: scale(0.96);  background: linear-gradient(180deg, #295822 0%, #173514 100%); }
         
-        .btn-editar { position: absolute; top: 5px; left: 5px; background: linear-gradient(180deg, #2d5a27 0%, #1e3f1a 100%); border: 1px solid #bbf7d0; color:#f4eae1; font-size: 11px; cursor: pointer; padding: 4px 6px; border-radius: 6px; font-weight: bold; width: auto; margin: 0; display: inline; z-index: 10; }
+        .btn-editar { position: absolute; top: 5px; left: 5px; background: linear-gradient(180deg, #2d5a27 0%, #1e3f1a 100%); color:#f4eae1; font-size: 11px; cursor: pointer; padding: 4px 6px; border-radius: 6px; font-weight: bold; width: auto; margin: 0; display: inline; z-index: 10; }
         .btn-editar:active {transform: scale(0.96);background: linear-gradient(180deg, #295822 0%, #173514 100%); }
         /* Barra de navegación inferior estilo Madera Oscura/Cuero */
         .nav-bar { 
